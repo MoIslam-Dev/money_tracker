@@ -48,9 +48,19 @@ class SectionHeader extends StatelessWidget {
     final t = Theme.of(context);
     return Row(
       children: [
+        Container(
+          width: 3,
+          height: 16,
+          decoration: BoxDecoration(
+            color: t.colorScheme.primary,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 9),
         Expanded(
           child: Text(title,
-              style: t.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+              style: t.textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w700, letterSpacing: 0.3)),
         ),
         if (actionText != null && onAction != null)
           TextButton(onPressed: onAction, child: Text(actionText!)),

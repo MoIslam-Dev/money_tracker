@@ -186,8 +186,8 @@ class DashboardScreen extends StatelessWidget {
 
   Widget _balanceCard(BuildContext context, int balance, int income, int expense) {
     final strings = context.watch<AppState>().strings;
-    final t = Theme.of(context);
-    final colorScheme = t.colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = colorScheme.brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
       child: Container(
@@ -199,19 +199,51 @@ class DashboardScreen extends StatelessWidget {
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: AppColors.gold.withValues(alpha: isDark ? 0.35 : 0.55),
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(strings.tr('balance'),
-                style: const TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 6),
-            Text(formatDA(balance),
-                style: const TextStyle(
-                    color: Colors.white, fontSize: 36, fontWeight: FontWeight.w800, height: 1.1)),
-            const SizedBox(height: 20),
-            const Divider(color: Colors.white24, height: 1),
-            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(strings.tr('balance'),
+                      style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 2.2)),
+                ),
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.gold, width: 1),
+                    color: AppColors.gold.withValues(alpha: 0.14),
+                  ),
+                  child: const Icon(Icons.workspace_premium_rounded,
+                      color: Colors.white, size: 18),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              formatDA(balance),
+              style: TextStyle(
+                fontFamily: 'PlayfairDisplay',
+                color: Colors.white,
+                fontSize: 42,
+                fontWeight: FontWeight.w600,
+                height: 1.05,
+                letterSpacing: 0.3,
+              ),
+            ),
+            const SizedBox(height: 18),
+            Container(height: 1, color: AppColors.gold.withValues(alpha: 0.3)),
+            const SizedBox(height: 14),
             Row(
               children: [
                 _balanceStat(strings.tr('money_in'), income, const Color(0xFF8CE99A)),
@@ -304,7 +336,11 @@ class DashboardScreen extends StatelessWidget {
           Text('$sign${formatDA(value.abs())}',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: color, fontWeight: FontWeight.w800, fontSize: 14)),
+              style: TextStyle(
+                  fontFamily: 'PlayfairDisplay',
+                  color: color,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15)),
         ],
       ),
     );
@@ -317,10 +353,19 @@ class DashboardScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label,
-              style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 4),
+              style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.4)),
+          const SizedBox(height: 5),
           Text('$prepend${formatDA(value.abs())}',
-              style: TextStyle(color: color, fontSize: 18, fontWeight: FontWeight.w800)),
+              style: TextStyle(
+                fontFamily: 'PlayfairDisplay',
+                color: color,
+                fontSize: 19,
+                fontWeight: FontWeight.w600,
+              )),
         ],
       ),
     );

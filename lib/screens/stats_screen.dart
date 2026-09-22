@@ -162,7 +162,11 @@ class _StatsScreenState extends State<StatsScreen> {
           Text(value,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: color, fontWeight: FontWeight.w800, fontSize: 15)),
+              style: TextStyle(
+                  fontFamily: 'PlayfairDisplay',
+                  color: color,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16)),
         ],
       ),
     );

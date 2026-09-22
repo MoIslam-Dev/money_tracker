@@ -212,10 +212,31 @@ class LuxColors extends ThemeExtension<LuxColors> {
   }
 }
 
-TextTheme _textTheme(ThemeData base, ColorScheme scheme) => base.textTheme.apply(
-      bodyColor: scheme.onSurface,
-      displayColor: scheme.onSurface,
-    );
+TextTheme _textTheme(ThemeData base, ColorScheme scheme) {
+  final t = base.textTheme.apply(
+    bodyColor: scheme.onSurface,
+    displayColor: scheme.onSurface,
+  );
+  // Elegant serif for headings, titles and money figures; body/labels stay
+  // sans for legibility. Playfair Display has no Arabic glyphs, so Arabic
+  // text falls back to the system font automatically.
+  TextStyle serif(TextStyle? s) => s!.copyWith(
+        fontFamily: 'PlayfairDisplay',
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.2,
+        height: s.height ?? 1.15,
+      );
+  return t.copyWith(
+    displayLarge: serif(t.displayLarge),
+    displayMedium: serif(t.displayMedium),
+    displaySmall: serif(t.displaySmall),
+    headlineLarge: serif(t.headlineLarge),
+    headlineMedium: serif(t.headlineMedium),
+    headlineSmall: serif(t.headlineSmall),
+    titleLarge: serif(t.titleLarge),
+    titleMedium: serif(t.titleMedium),
+  );
+}
 
 ThemeData _base({
   required ColorScheme scheme,
@@ -254,7 +275,16 @@ ThemeData _base({
       elevation: 0,
       color: card,
       surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(22),
+        side: BorderSide(
+          // Gold hairline frames every surface in the dark theme and a soft
+          // warm hairline in the light theme for a crafted, premium feel.
+          color: scheme.brightness == Brightness.dark
+              ? AppColors.gold.withValues(alpha: 0.16)
+              : scheme.outlineVariant.withValues(alpha: 0.55),
+        ),
+      ),
       margin: EdgeInsets.zero,
     ),
     dialogTheme: DialogThemeData(
@@ -303,9 +333,9 @@ ThemeData _base({
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       side: BorderSide.none,
       backgroundColor: chip ?? lux.chip,
-      selectedColor: scheme.secondaryContainer,
+      selectedColor: scheme.primary,
       labelStyle: TextStyle(color: scheme.onSurface),
-      secondaryLabelStyle: TextStyle(color: scheme.onSecondaryContainer),
+      secondaryLabelStyle: TextStyle(color: scheme.onPrimary),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
