@@ -233,4 +233,104 @@ void main() {
     expect(formatDA(t.amount), '150\u2009000 DA');
     expect(t.date, '2025-07-08');
   });
+
+  test('monthlyBalanceSeries accumulates net balance', () async {
+    final incomeCat = categoryId('salary');
+    final expenseCat = categoryId('food');
+    final now = DateTime.now();
+    await state.addTransaction(
+        type: TxType.income,
+        amount: 50000,
+        categoryId: incomeCat,
+        date: DateTime(now.year, now.month - 1, 5));
+    await state.addTransaction(
+        type: TxType.expense,
+        amount: 20000,
+        categoryId: expenseCat,
+        date: DateTime(now.year, now.month - 1, 10));
+    final series = state.monthlyBalanceSeries(3);
+    expect(series.length, 3);
+    expect(series[0].$2, 0);
+    expect(series[1].$2, 30000);
+    expect(series[2].$2, 30000);
+    expect(series[1].$1, '${now.year}-${(now.month - 1).toString().padLeft(2, '0')}');
+  });
+
+  test('weekdayAverages is zero with no data', () {
+    final avg = state.weekdayAverages(4);
+    expect(avg.length, 7);
+    expect(avg.every((v) => v == 0), isTrue);
+  });
+
+  test('weekdayAverages buckets expenses by weekday', () async {
+    final food = categoryId('food')!;
+    final now = DateTime.now();
+    await state.addTransaction(
+        type: TxType.expense,
+        amount: 7000,
+        categoryId: food,
+        date: DateTime(now.year, now.month, now.day));
+    final avg = state.weekdayAverages(4);
+    final idx = now.weekday - 1;
+    expect(avg[idx], greaterThan(0));
+    for (var i = 0; i < 7; i++) {
+      if (i != idx) expect(avg[i], 0);
+    }
+  });
+
+  test('daily average and projection for current month', () async {
+    final food = categoryId('food')!;
+    final now = DateTime.now();
+    await state.addTransaction(
+        type: TxType.expense,
+        amount: 30000,
+        categoryId: food,
+        date: DateTime(now.year, now.month, now.day));
+    final daily = state.dailyAverageExpense(state.currentMonth);
+    expect(daily, 30000 ~/ now.day);
+    final projected = state.projectedExpense(state.currentMonth);
+    expect(projected, daily * DateTime(now.year, now.month + 1, 0).day);
+  });
+
+  test('projection for a past month equals its actual spend', () async {
+    final food = categoryId('food')!;
+    final now = DateTime.now();
+    final prev = DateTime(now.year, now.month - 1);
+    await state.addTransaction(
+        type: TxType.expense,
+        amount: 9000,
+        categoryId: food,
+        date: DateTime(prev.year, prev.month, 1));
+    expect(state.projectedExpense(prev), 9000);
+  });
+
+  test('largestTransactions ranks by amount', () async {
+    final food = categoryId('food')!;
+    final salary = categoryId('salary');
+    final m = state.currentMonth;
+    await state.addTransaction(
+        type: TxType.expense,
+        amount: 1000,
+        categoryId: food,
+        date: DateTime(m.year, m.month, 1));
+    await state.addTransaction(
+        type: TxType.expense,
+        amount: 9000,
+        categoryId: food,
+        date: DateTime(m.year, m.month, 2));
+    await state.addTransaction(
+        type: TxType.expense,
+        amount: 5000,
+        categoryId: food,
+        date: DateTime(m.year, m.month, 3));
+    await state.addTransaction(
+        type: TxType.income,
+        amount: 70000,
+        categoryId: salary,
+        date: DateTime(m.year, m.month, 4));
+
+    expect(state.largestTransactions(m, isExpense: true).map((t) => t.amount),
+        [9000, 5000, 1000]);
+    expect(state.largestTransactions(m, isExpense: false, n: 1).single.amount, 70000);
+  });
 }

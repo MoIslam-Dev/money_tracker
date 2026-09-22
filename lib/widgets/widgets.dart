@@ -470,6 +470,97 @@ class TrendLine extends StatelessWidget {
   }
 }
 
+/// Single-series cumulative line with a soft area fill (e.g. net cash-flow).
+class BalanceTrend extends StatelessWidget {
+  final List<(String, int)> series;
+  final String lang;
+  const BalanceTrend({super.key, required this.series, this.lang = 'en'});
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context);
+    if (series.isEmpty) return const SizedBox.shrink();
+    final lo = series.fold<int>(0, (m, e) => e.$2 < m ? e.$2 : m);
+    final hi = series.fold<int>(0, (m, e) => e.$2 > m ? e.$2 : m);
+    var pad = ((hi - lo) * 0.18).round();
+    if (pad < 1) pad = 1;
+
+    return LineChart(
+      LineChartData(
+        minY: (lo - pad).toDouble(),
+        maxY: (hi + pad).toDouble(),
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          getDrawingHorizontalLine: (_) => FlLine(
+            color: t.colorScheme.outlineVariant.withValues(alpha: 0.3),
+            strokeWidth: 1,
+          ),
+        ),
+        borderData: FlBorderData(show: false),
+        titlesData: FlTitlesData(
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 44,
+              getTitlesWidget: (v, meta) => Text(
+                formatDAShort(v.toInt()),
+                style: t.textTheme.labelSmall?.copyWith(color: t.colorScheme.outline),
+              ),
+            ),
+          ),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 28,
+              getTitlesWidget: (v, meta) {
+                final idx = v.toInt();
+                if (idx < 0 || idx >= series.length) return const SizedBox.shrink();
+                final parts = series[idx].$1.split('-');
+                return Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    monthShort(int.parse(parts[1]), lang),
+                    style: t.textTheme.labelSmall?.copyWith(color: t.colorScheme.outline),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        lineBarsData: [
+          LineChartBarData(
+            spots: [
+              for (var i = 0; i < series.length; i++)
+                FlSpot(i.toDouble(), series[i].$2.toDouble())
+            ],
+            isCurved: true,
+            curveSmoothness: 0.35,
+            color: t.colorScheme.primary,
+            barWidth: 3,
+            dotData: const FlDotData(show: false),
+            belowBarData: BarAreaData(
+              show: true,
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  t.colorScheme.primary.withValues(alpha: 0.35),
+                  t.colorScheme.primary.withValues(alpha: 0.02),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOut,
+    );
+  }
+}
+
 /// Primary action button with full width.
 class BigButton extends StatelessWidget {
   final String label;

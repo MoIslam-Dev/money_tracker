@@ -522,6 +522,78 @@ class AppState extends ChangeNotifier {
     return s;
   }
 
+  // ---- professional analytics ----
+
+  /// Cumulative net balance (income minus expenses) across the last [n]
+  /// months ending with the current one. Series of (yyyy-MM, balance).
+  List<(String, int)> monthlyBalanceSeries(int n) {
+    final now = DateTime.now();
+    final sorted = [...transactions]..sort((a, b) => a.date.compareTo(b.date));
+    final out = <(String, int)>[];
+    var bal = 0;
+    var idx = 0;
+    for (var i = n - 1; i >= 0; i--) {
+      final m = DateTime(now.year, now.month - i);
+      final prefix = '${m.year}-${m.month.toString().padLeft(2, '0')}';
+      while (idx < sorted.length && sorted[idx].date.startsWith(prefix)) {
+        final t = sorted[idx++];
+        bal += t.isExpense ? -t.amount : t.amount;
+      }
+      out.add((prefix, bal));
+    }
+    return out;
+  }
+
+  /// Average amount spent per weekday over the last [weeks] weeks
+  /// (Monday..Sunday). Index 0 = Monday.
+  List<int> weekdayAverages(int weeks) {
+    final now = DateTime.now();
+    final start = startOfDay(now.subtract(Duration(days: weeks * 7 - 1)));
+    final sums = List<int>.filled(7, 0);
+    final counts = List<int>.filled(7, 0);
+    for (var d = start; !d.isAfter(now); d = d.add(const Duration(days: 1))) {
+      counts[d.weekday - 1]++;
+    }
+    for (final t in transactions) {
+      if (!t.isExpense) continue;
+      final d = parseDateKey(t.date);
+      if (d.isBefore(start) || d.isAfter(now)) continue;
+      sums[d.weekday - 1] += t.amount;
+    }
+    return [for (var i = 0; i < 7; i++) counts[i] == 0 ? 0 : sums[i] ~/ counts[i]];
+  }
+
+  /// Average expense per elapsed day in [m] (current month) or full-month
+  /// average otherwise.
+  int dailyAverageExpense(DateTime m) {
+    final (_, exp) = monthTotals(m);
+    final now = DateTime.now();
+    final days = (m.year == now.year && m.month == now.month)
+        ? now.day
+        : DateTime(m.year, m.month + 1, 0).day;
+    return days == 0 ? 0 : exp ~/ days;
+  }
+
+  /// Projected total spend for [m]: for the current month the current pacing
+  /// extrapolated to month-end; otherwise the month's actual spend.
+  int projectedExpense(DateTime m) {
+    if (m.year == DateTime.now().year && m.month == DateTime.now().month) {
+      return dailyAverageExpense(m) * DateTime(m.year, m.month + 1, 0).day;
+    }
+    return monthTotals(m).$2;
+  }
+
+  /// The [n] largest transactions of the given kind within [m].
+  List<AppTransaction> largestTransactions(DateTime m,
+      {required bool isExpense, int n = 3}) {
+    final prefix = '${m.year}-${m.month.toString().padLeft(2, '0')}';
+    final list = transactions
+        .where((t) => t.isExpense == isExpense && t.date.startsWith(prefix))
+        .toList()
+      ..sort((a, b) => b.amount.compareTo(a.amount));
+    return list.take(n).toList();
+  }
+
   // ---------- demo data ----------
   Future<void> addDemoData() async {
     await _wipeDemo();

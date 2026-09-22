@@ -227,6 +227,18 @@ class AppStrings {
     'slot_evening': 'Daily money check',
     'time': 'Time',
     'permission_needed': 'Notifications are disabled for Money Tracker. Please allow them in the system settings to receive reminders.',
+    'net_cashflow': 'Net cash-flow',
+    'net_cashflow_hint': 'Rolling 6 months · income minus expenses',
+    'spending_habits': 'Spending habits',
+    'monthly_pace': 'Monthly pace',
+    'daily_avg': 'Daily average',
+    'projected': 'Projected month-end',
+    'pace_caption': 'Day {d} of {D}',
+    'on_track': 'On track',
+    'over_pace': 'Over pace',
+    'biggest_moves': 'Biggest moves',
+    'biggest_expense': 'Biggest expense',
+    'biggest_income': 'Biggest income',
   };
 
   static const Map<String, String> _fr = {
@@ -439,6 +451,18 @@ class AppStrings {
     'slot_evening': 'Bilan du jour',
     'time': 'Heure',
     'permission_needed': 'Les notifications sont désactivées pour Money Tracker. Autorisez-les dans les réglages système pour recevoir les rappels.',
+    'net_cashflow': 'Flux de trésorerie net',
+    'net_cashflow_hint': '6 derniers mois · entrées moins sorties',
+    'spending_habits': 'Habitudes de dépense',
+    'monthly_pace': 'Rythme du mois',
+    'daily_avg': 'Moyenne journalière',
+    'projected': 'Prévision de fin de mois',
+    'pace_caption': 'Jour {d} sur {D}',
+    'on_track': 'Dans les temps',
+    'over_pace': 'Au-dessus de la cadence',
+    'biggest_moves': 'Les plus grosses transactions',
+    'biggest_expense': 'Plus grosse dépense',
+    'biggest_income': 'Plus gros revenu',
   };
 
   static const Map<String, String> _ar = {
@@ -651,6 +675,18 @@ class AppStrings {
     'slot_evening': 'مراجعة اليوم',
     'time': 'الوقت',
     'permission_needed': 'الإشعارات معطّلة لتطبيق Money Tracker. يرجى السماح بها في إعدادات النظام لتلقي التذكيرات.',
+    'net_cashflow': 'التدفق النقدي الصافي',
+    'net_cashflow_hint': 'آخر 6 أشهر · الدخل ناقص المصاريف',
+    'spending_habits': 'عادات الإنفاق',
+    'monthly_pace': 'وتيرة الشهر',
+    'daily_avg': 'المتوسط اليومي',
+    'projected': 'التوقع نهاية الشهر',
+    'pace_caption': 'اليوم {d} من {D}',
+    'on_track': 'على المسار',
+    'over_pace': 'فوق الوتيرة',
+    'biggest_moves': 'أكبر الحركات',
+    'biggest_expense': 'أكبر مصروف',
+    'biggest_income': 'أكبر دخل',
   };
 
   /// Default expense category slug -> localized display name.

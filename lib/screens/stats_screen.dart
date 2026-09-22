@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/models.dart';
 import '../state/app_state.dart';
 import '../theme/theme.dart';
 import '../utils/money.dart';
@@ -57,6 +58,22 @@ class _StatsScreenState extends State<StatsScreen> {
               SectionHeader(strings.tr('compare_months')),
               const SizedBox(height: 12),
               _compareCard(context),
+              const SizedBox(height: 24),
+              SectionHeader(strings.tr('net_cashflow')),
+              const SizedBox(height: 12),
+              _cashflowCard(context),
+              const SizedBox(height: 24),
+              SectionHeader(strings.tr('spending_habits')),
+              const SizedBox(height: 12),
+              _weekdayCard(context),
+              const SizedBox(height: 24),
+              SectionHeader(strings.tr('monthly_pace')),
+              const SizedBox(height: 12),
+              _paceCard(context, month),
+              const SizedBox(height: 24),
+              SectionHeader(strings.tr('biggest_moves')),
+              const SizedBox(height: 12),
+              _biggestMoves(context, month),
             ],
           ),
         ),
@@ -455,6 +472,235 @@ class _StatsScreenState extends State<StatsScreen> {
         Text('${diff >= 0 ? '+' : ''}${formatDA(diff)}',
             style: TextStyle(color: diff == 0 ? t.colorScheme.outline : color, fontWeight: FontWeight.w800)),
       ],
+    );
+  }
+
+  Widget _cashflowCard(BuildContext context) {
+    final state = context.watch<AppState>();
+    final strings = state.strings;
+    final t = Theme.of(context);
+    final series = state.monthlyBalanceSeries(6);
+    return SectionCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (series.isNotEmpty) ...[
+            Text(formatDA(series.last.$2),
+                style: t.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+            const SizedBox(height: 4),
+            Text(strings.tr('net_cashflow_hint'),
+                style: t.textTheme.labelSmall
+                    ?.copyWith(color: t.colorScheme.onSurfaceVariant)),
+            const SizedBox(height: 14),
+          ],
+          SizedBox(height: 190, child: BalanceTrend(series: series, lang: strings.lang)),
+        ],
+      ),
+    );
+  }
+
+  Widget _weekdayCard(BuildContext context) {
+    final state = context.watch<AppState>();
+    final strings = state.strings;
+    final t = Theme.of(context);
+    final avg = state.weekdayAverages(8);
+    final hasData = avg.any((v) => v > 0);
+    final maxV = avg.fold<int>(1, (m, v) => v > m ? v : m);
+    return SectionCard(
+      padding: const EdgeInsets.all(16),
+      child: hasData
+          ? Column(
+              children: [
+                for (var i = 0; i < 7; i++) _weekdayRow(context, i, avg[i], maxV),
+              ],
+            )
+          : Text(strings.tr('no_data_chart'),
+              style: t.textTheme.bodyMedium
+                  ?.copyWith(color: t.colorScheme.onSurfaceVariant)),
+    );
+  }
+
+  Widget _weekdayRow(BuildContext context, int i, int value, int maxV) {
+    final t = Theme.of(context);
+    final strings = context.watch<AppState>().strings;
+    final isPeak = value > 0 && value == maxV;
+    final color = isPeak ? t.colorScheme.primary : AppColors.expenseOn(context);
+    final fraction = maxV == 0 ? 0.0 : (value / maxV).clamp(0.0, 1.0);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 30,
+            child: Text(weekdayShort(i + 1, strings.lang),
+                style: t.textTheme.labelSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: isPeak ? color : t.colorScheme.onSurfaceVariant)),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(5),
+              child: Container(
+                height: 9,
+                color: t.colorScheme.surfaceContainerHighest,
+                alignment: Alignment.centerLeft,
+                child: FractionallySizedBox(
+                  widthFactor: fraction,
+                  child: Container(color: color),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          SizedBox(
+            width: 72,
+            child: Text(formatDA(value),
+                textAlign: TextAlign.end,
+                style: t.textTheme.labelSmall
+                    ?.copyWith(fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _paceCard(BuildContext context, DateTime month) {
+    final state = context.watch<AppState>();
+    final strings = state.strings;
+    final t = Theme.of(context);
+    final exp = state.monthTotals(month).$2;
+    final dailyAvg = state.dailyAverageExpense(month);
+    final projected = state.projectedExpense(month);
+    final now = DateTime.now();
+    final isCurrent = _isSameMonth(month, now);
+    final daysTotal = DateTime(month.year, month.month + 1, 0).day;
+    final elapsed = isCurrent ? now.day : daysTotal;
+    final onTrack = projected <= 0 || exp <= projected;
+    final statusColor = onTrack ? AppColors.incomeOn(context) : AppColors.expenseOn(context);
+
+    return SectionCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                  child: _statBox(context, strings.tr('daily_avg'), formatDA(dailyAvg), t.colorScheme.primary)),
+              const SizedBox(width: 10),
+              Expanded(
+                  child: _statBox(context, strings.tr('projected'), formatDA(projected), AppColors.expenseOn(context))),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: LinearProgressIndicator(
+                    value: projected <= 0 ? 0 : (exp / projected).clamp(0.0, 1.0),
+                    minHeight: 10,
+                    backgroundColor: t.colorScheme.surfaceContainerHighest,
+                    color: statusColor,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Icon(onTrack ? Icons.trending_up_rounded : Icons.trending_down_rounded,
+                  color: statusColor, size: 22),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              '${strings.tr('pace_caption').replaceAll('{d}', '$elapsed').replaceAll('{D}', '$daysTotal')} · ${onTrack ? strings.tr('on_track') : strings.tr('over_pace')}',
+              style: t.textTheme.labelSmall?.copyWith(color: statusColor, fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _biggestMoves(BuildContext context, DateTime month) {
+    final state = context.watch<AppState>();
+    final strings = state.strings;
+    final t = Theme.of(context);
+    final topExp = state.largestTransactions(month, isExpense: true);
+    final topInc = state.largestTransactions(month, isExpense: false, n: 1);
+    final hasExp = topExp.isNotEmpty;
+    final hasInc = topInc.isNotEmpty;
+    if (!hasExp && !hasInc) {
+      return Text(strings.tr('no_data_chart'),
+          style: t.textTheme.bodyMedium?.copyWith(color: t.colorScheme.onSurfaceVariant));
+    }
+    return SectionCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (hasExp) ...[
+            Text(strings.tr('biggest_expense'),
+                style: t.textTheme.labelMedium
+                    ?.copyWith(fontWeight: FontWeight.w800, color: AppColors.expenseOn(context))),
+            const SizedBox(height: 8),
+            for (final tx in topExp) _moveRow(context, tx),
+          ],
+          if (hasExp && hasInc) const SizedBox(height: 14),
+          if (hasInc) ...[
+            Text(strings.tr('biggest_income'),
+                style: t.textTheme.labelMedium
+                    ?.copyWith(fontWeight: FontWeight.w800, color: AppColors.incomeOn(context))),
+            const SizedBox(height: 8),
+            for (final tx in topInc) _moveRow(context, tx),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _moveRow(BuildContext context, AppTransaction tx) {
+    final state = context.watch<AppState>();
+    final strings = state.strings;
+    final t = Theme.of(context);
+    final cat = tx.categoryId == null ? null : state.categoryById(tx.categoryId);
+    final label = cat == null ? strings.tr('other') : strings.categoryName(cat.name);
+    final color = tx.isExpense ? AppColors.expenseOn(context) : AppColors.incomeOn(context);
+    final parts = tx.date.split('-');
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(iconFor(cat?.icon ?? 'more_horiz'), size: 17, color: color),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: t.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)),
+                Text('${int.parse(parts[2])} ${monthShort(int.parse(parts[1]), strings.lang)}',
+                    style: t.textTheme.labelSmall?.copyWith(color: t.colorScheme.onSurfaceVariant)),
+              ],
+            ),
+          ),
+          Text('${tx.isExpense ? '- ' : '+'}${formatDA(tx.amount)}',
+              style: TextStyle(color: color, fontWeight: FontWeight.w800)),
+        ],
+      ),
     );
   }
 }
