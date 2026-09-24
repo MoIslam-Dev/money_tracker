@@ -71,6 +71,22 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  String get currency => settings.currency;
+
+  /// Currency-aware, RTL-safe money rendering for the current lang + currency.
+  String money(int amount) => formatMoney(amount, settings.lang, settings.currency);
+
+  /// Compact (chart) form of the current-currency money.
+  String moneyShort(int amount) =>
+      formatMoneyShort(amount, settings.lang, settings.currency);
+
+  String get currencyLabel => '${settings.currency} · ${currencySymbol(settings.currency)}';
+
+  Future<void> setCurrency(String v) async {
+    settings.setCurrency(v);
+    notifyListeners();
+  }
+
   Future<void> setTheme(String theme) async {
     settings.setTheme(theme);
     notifyListeners();

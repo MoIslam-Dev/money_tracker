@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import '../state/app_state.dart';
 import '../state/settings_store.dart';
 import '../utils/backup.dart';
+import '../models/currency.dart';
 import '../utils/excel_export.dart';
 import 'categories_screen.dart';
 import 'notification_settings_screen.dart';
@@ -35,8 +36,8 @@ class SettingsScreen extends StatelessWidget {
             _tile(context,
                 icon: Icons.payments_rounded,
                 title: strings.tr('currency'),
-                trailing: const Text('DZD / DA · DA'),
-                onTap: () => _toast(context, 'DZD / DA')),
+                trailing: Text(state.currencyLabel),
+                onTap: () => _pickCurrency(context)),
             _sectionLabel(context, strings.tr('language')),
             _langRow(context),
             _sectionLabel(context, strings.tr('theme')),
@@ -190,13 +191,58 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
+
+  Future<void> _pickCurrency(BuildContext context) async {
+    final state = context.read<AppState>();
+    final strings = state.strings;
+    final all = <AppCurrency>[...kPopularCurrencies, customCurrency(state.currency)];
+    final sel = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+              child: Text(strings.tr('currency'),
+                  style: Theme.of(ctx).textTheme.titleMedium),
+            ),
+            for (final c in all)
+              ListTile(
+                leading: Text(c.symbol, style: const TextStyle(fontSize: 20)),
+                title: Text("${c.code} · ${c.nameEn}"),
+                subtitle: Text(_currencyLocalized(c, state.settings.lang)),
+                trailing: state.currency == c.code
+                    ? const Icon(Icons.check_rounded, color: Colors.green)
+                    : null,
+                onTap: () async {
+                  await state.setCurrency(c.code);
+                  if (ctx.mounted) Navigator.pop(ctx, c.code);
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+    if (sel != null) {
+      _toast(context, '${strings.tr('currency')}: ${state.currency} · ${state.currencyLabel}');
+    }
+  }
+
+  String _currencyLocalized(AppCurrency c, String lang) {
+    if (lang == 'fr') return c.nameFr;
+    if (lang == 'ar') return c.nameAr;
+    return c.nameEn;
+  }
   Widget _themeRow(BuildContext context) {
     final state = context.watch<AppState>();
     final strings = state.strings;
     final options = {
       'light': strings.tr('light'),
+      // 'system' deliberately removed: the app now follows the device by
+      // default until the user picks light or dark explicitly.
       'dark': strings.tr('dark'),
-      'system': strings.tr('system'),
     };
     return SegmentedButton<String>(
       segments: [

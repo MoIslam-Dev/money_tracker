@@ -33,6 +33,7 @@ class SettingsStore {
   static const _kLastPayment = 'settings.lastPayment';
   static const _kNotifEnabled = 'settings.notifEnabled';
   static const _kNotifSlots = 'settings.notifSlots';
+  static const _kCurrency = 'settings.currency';
 
   String lang = 'fr';
   String theme = 'system'; // light | dark | system
@@ -42,6 +43,9 @@ class SettingsStore {
   bool demoSeen = false;
   String? pinHash;
   String lastPayment = 'cash';
+
+  /// ISO 4217 currency code; default DZD for Algeria. Persisted.
+  String currency = 'DZD';
   bool notifEnabled = false;
   List<NotifSlot> notifSlots = [
     NotifSlot(key: 'morning', hour: 8),
@@ -59,6 +63,7 @@ class SettingsStore {
     demoSeen = p.getBool(_kDemoSeen) ?? false;
     pinHash = p.getString(_kPinHash);
     lastPayment = p.getString(_kLastPayment) ?? 'cash';
+    currency = p.getString(_kCurrency) ?? 'DZD';
     notifEnabled = p.getBool(_kNotifEnabled) ?? false;
     final rawSlots = p.getString(_kNotifSlots);
     if (rawSlots != null && rawSlots.isNotEmpty) {
@@ -80,6 +85,7 @@ class SettingsStore {
     await p.setBool(_kDemoAdded, demoAdded);
     await p.setBool(_kDemoSeen, demoSeen);
     await p.setString(_kLastPayment, lastPayment);
+    await p.setString(_kCurrency, currency);
     await p.setBool(_kNotifEnabled, notifEnabled);
     await p.setString(_kNotifSlots, jsonEncode(notifSlots.map((s) => s.toJson()).toList()));
     if (pinHash != null) {
@@ -126,6 +132,11 @@ class SettingsStore {
 
   void setLastPayment(String v) {
     lastPayment = v;
+    save();
+  }
+
+  void setCurrency(String v) {
+    currency = v;
     save();
   }
 
