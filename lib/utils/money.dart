@@ -16,6 +16,63 @@ String formatDA(int amount) {
   }
   return '${neg ? '-' : ''}$buf DA';
 }
+/// Format [amount] in the given [currency] for the current [lang].
+/// Digit order is preserved (RTL-safe), sign sticks to the digits, and the
+/// currency symbol is separated by a thin space, localized under LRI/PDI
+/// isolates so Arabic UIs render `-2 500 DA` not `DA 750 2 -`.
+///
+/// [symbolBefore] controls DA-style `85 000 DA` vs `85 000 €` ordering.
+String formatMoney(int amount, String lang, String currencyCode,
+    {bool symbolBefore = false}) {
+  return _formatWithSymbol(
+      formatDA(amount).trim(),
+      currencySymbol(currencyCode),
+      lang,
+      symbolBefore);
+}
+
+/// Compact chart form of [formatMoney]: `85k`, `2.5M`.
+String formatMoneyShort(int amount, String lang, String currencyCode,
+    {bool symbolBefore = false}) {
+  return _formatWithSymbol(
+      formatDAShort(amount), currencySymbol(currencyCode), lang, symbolBefore);
+}
+
+/// Full, localized symbol for [code] — `DA`, `DA`, `DZD`, `د.ج`, `€`…
+String currencySymbol(String code) {
+  switch (code) {
+    case 'DZD':
+      return 'DA';
+    case 'EUR':
+      return '€';
+    case 'USD':
+      return r'$';
+    case 'GBP':
+      return '£';
+    case 'CHF':
+      return 'CHF';
+    case 'MAD':
+      return 'MAD';
+    case 'SAR':
+      return 'SAR';
+    case 'TND':
+      return 'د.ت';
+    default:
+      return code;
+  }
+}
+
+String _formatWithSymbol(
+    String value, String symbol, String lang, bool symbolBefore) {
+  final lri = '\u2066';
+  final pdi = '\u2069';
+  final sep = lang == 'ar' ? '\u2009' : ' ';
+  if (symbolBefore) {
+    return '$lri$symbol$sep$value$pdi';
+  }
+  return '$lri$value$sep$symbol$pdi';
+}
+
 
 /// Compact form used inside charts: `85k`, `2.5M`.
 String formatDAShort(int amount) {
