@@ -48,6 +48,8 @@ class SettingsScreen extends StatelessWidget {
             _langRow(context),
             _sectionLabel(context, strings.tr('theme')),
             _themeRow(context),
+            _sectionLabel(context, strings.tr('statistics')),
+            _habitsWeeksRow(context),
             _sectionLabel(context, strings.tr('security')),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
@@ -231,6 +233,40 @@ class SettingsScreen extends StatelessWidget {
             onSelected: (_) => state.setLang(e.key),
           ),
       ],
+    );
+  }
+
+  Widget _habitsWeeksRow(BuildContext context) {
+    final state = context.watch<AppState>();
+    final strings = state.strings;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            strings.tr('habits_window'),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final w in [4, 8, 12])
+                ChoiceChip(
+                  label: Text(
+                    strings.tr('weeks').replaceAll('{n}', '$w'),
+                  ),
+                  selected: state.settings.spendingHabitsWeeks == w,
+                  onSelected: (_) => state.setSpendingHabitsWeeks(w),
+                ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 

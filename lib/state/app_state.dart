@@ -168,6 +168,11 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setSpendingHabitsWeeks(int weeks) async {
+    settings.setSpendingHabitsWeeks(weeks);
+    notifyListeners();
+  }
+
   // ---------- categories ----------
   AppCategory? categoryOf(AppTransaction t) {
     if (t.categoryId == null) return null;

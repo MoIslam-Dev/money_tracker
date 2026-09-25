@@ -47,6 +47,7 @@ class SettingsStore {
   static const _kNotifSlots = 'settings.notifSlots';
   static const _kCurrency = 'settings.currency';
   static const _kCustomCurrencies = 'settings.customCurrencies';
+  static const _kHabitsWeeks = 'stats.habitsWeeks';
 
   String lang = 'fr';
   String theme = 'system'; // light | dark | system
@@ -60,6 +61,7 @@ class SettingsStore {
   /// ISO 4217 currency code; default DZD for Algeria. Persisted.
   String currency = 'DZD';
   List<AppCurrency> customCurrencies = [];
+  int spendingHabitsWeeks = 8;
   bool notifEnabled = false;
   List<NotifSlot> notifSlots = [
     NotifSlot(key: 'morning', hour: 8),
@@ -78,6 +80,7 @@ class SettingsStore {
     pinHash = p.getString(_kPinHash);
     lastPayment = p.getString(_kLastPayment) ?? 'cash';
     currency = p.getString(_kCurrency) ?? 'DZD';
+    spendingHabitsWeeks = p.getInt(_kHabitsWeeks) ?? 8;
     customCurrencies = _loadCustomCurrencies(p.getString(_kCustomCurrencies));
     notifEnabled = p.getBool(_kNotifEnabled) ?? false;
     final rawSlots = p.getString(_kNotifSlots);
@@ -102,6 +105,7 @@ class SettingsStore {
     await p.setBool(_kDemoSeen, demoSeen);
     await p.setString(_kLastPayment, lastPayment);
     await p.setString(_kCurrency, currency);
+    await p.setInt(_kHabitsWeeks, spendingHabitsWeeks);
     await p.setString(
       _kCustomCurrencies,
       jsonEncode(customCurrencies.map((c) => c.toJson()).toList()),
@@ -160,6 +164,11 @@ class SettingsStore {
 
   void setCurrency(String v) {
     currency = v;
+    save();
+  }
+
+  void setSpendingHabitsWeeks(int v) {
+    spendingHabitsWeeks = v;
     save();
   }
 

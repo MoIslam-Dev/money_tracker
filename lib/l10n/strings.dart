@@ -280,11 +280,13 @@ class AppStrings {
     'stats_net_cashflow':
         'Your cumulative balance — income minus expenses — over the last 6 months, so you can see whether you are building or using up savings.',
     'stats_spending_habits':
-        'Average spent per weekday over the last 8 weeks, scaled to your busiest day, to spot the days you spend the most.',
+        'Average spent per weekday over the window you choose in Settings (4, 8 or 12 weeks), scaled to your busiest day, to spot the days you spend the most.',
     'stats_monthly_pace':
         'Your average daily expenses and the projected month-end total if you keep this pace, with an on-track / over-pace status.',
     'stats_biggest_moves':
         'The single biggest expenses and the biggest income of the month at a glance.',
+    'habits_window': 'Spending habits window',
+    'weeks': '{n} weeks',
   };
 
   static const Map<String, String> _fr = {
@@ -552,11 +554,13 @@ class AppStrings {
     'stats_net_cashflow':
         'Votre solde cumulé — revenus moins dépenses — sur les 6 derniers mois, pour voir si vous épargnez ou puisez dans vos économies.',
     'stats_spending_habits':
-        'Moyenne dépensée par jour de la semaine sur les 8 dernières semaines, à l’échelle de votre journée la plus chargée, pour repérer vos jours de dépenses.',
+        'Moyenne dépensée par jour de la semaine sur la période choisie dans les réglages (4, 8 ou 12 semaines), à l’échelle de votre journée la plus chargée, pour repérer vos jours de dépenses.',
     'stats_monthly_pace':
         'Vos dépenses moyennes par jour et le total de fin de mois projeté à ce rythme, avec un statut dans les temps / au-dessus de la cadence.',
     'stats_biggest_moves':
         'Les plus grosses dépenses et le plus gros revenu du mois en un coup d’œil.',
+    'habits_window': 'Fenêtre des habitudes de dépense',
+    'weeks': '{n} semaines',
   };
 
   static const Map<String, String> _ar = {
@@ -818,11 +822,13 @@ class AppStrings {
     'stats_net_cashflow':
         'رصيدك التراكمي — الدخل ناقص المصاريف — خلال آخر 6 أشهر، لتعرف إن كنت تدّخر أو تستنزف مدخراتك.',
     'stats_spending_habits':
-        'متوسط الإنفاق لكل يوم أسبوعي خلال آخر 8 أسابيع، مقارنةً بيومك الأكثر ازدحامًا، لاكتشاف أيام إنفاقك الأعلى.',
+        'متوسط الإنفاق لكل يوم أسبوعي خلال الفترة التي تختارها في الإعدادات (4 أو 8 أو 12 أسبوعًا)، مقارنةً بيومك الأكثر ازدحامًا، لاكتشاف أيام إنفاقك الأعلى.',
     'stats_monthly_pace':
         'متوسط إنفاقك اليومي وما يُتوقع إنفاقه نهاية الشهر بهذا المعدل، مع حالة داخل المسار / فوق الوتيرة.',
     'stats_biggest_moves':
         'أكبر المصروفات وأكبر دخل في الشهر في نظرة واحدة.',
+    'habits_window': 'نافذة عادات الإنفاق',
+    'weeks': '{n} أسابيع',
   };
 
   /// Default expense category slug -> localized display name.

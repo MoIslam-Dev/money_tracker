@@ -795,7 +795,7 @@ class _StatsScreenState extends State<StatsScreen> {
     final state = context.watch<AppState>();
     final strings = state.strings;
     final t = Theme.of(context);
-    final avg = state.weekdayAverages(8);
+    final avg = state.weekdayAverages(state.settings.spendingHabitsWeeks);
     final hasData = avg.any((v) => v > 0);
     final maxV = avg.fold<int>(1, (m, v) => v > m ? v : m);
     return SectionCard(
