@@ -80,6 +80,7 @@ class AppStrings {
     'clear': 'Clear',
     'apply': 'Apply',
     'statistics': 'Statistics',
+    'more_info': 'About this statistic',
     'spending_by_category': 'Spending by category',
     'where_money_go': "Where did my money go?",
     'this_month': 'This month',
@@ -266,6 +267,24 @@ class AppStrings {
     'biggest_moves': 'Biggest moves',
     'biggest_expense': 'Biggest expense',
     'biggest_income': 'Biggest income',
+    'stats_monthly_summary':
+        'Your income, expenses and what you saved this month, plus your savings rate — the share of income you did not spend.',
+    'stats_spending_by_category':
+        'Breakdown of this month’s spending per category. Larger slices mean more money spent in that category.',
+    'stats_where_money_go':
+        'Categories ranked by total spend, with the share (%) each one represents of the month overall. Tap a category to open its transactions.',
+    'stats_trends':
+        'Income versus expenses over the period you choose (7 or 30 days, 3, 6 or 12 months). The chart compares how much money came in and went out.',
+    'stats_compare_months':
+        'The selected month next to the previous one, with the difference (+/-) for income and expenses, and a 6-month trend line.',
+    'stats_net_cashflow':
+        'Your cumulative balance — income minus expenses — over the last 6 months, so you can see whether you are building or using up savings.',
+    'stats_spending_habits':
+        'Average spent per weekday over the last 8 weeks, scaled to your busiest day, to spot the days you spend the most.',
+    'stats_monthly_pace':
+        'Your average daily expenses and the projected month-end total if you keep this pace, with an on-track / over-pace status.',
+    'stats_biggest_moves':
+        'The single biggest expenses and the biggest income of the month at a glance.',
   };
 
   static const Map<String, String> _fr = {
@@ -331,6 +350,7 @@ class AppStrings {
     'clear': 'Effacer',
     'apply': 'Appliquer',
     'statistics': 'Statistiques',
+    'more_info': 'À propos de cette statistique',
     'spending_by_category': 'Dépenses par catégorie',
     'where_money_go': 'Où va mon argent ?',
     'this_month': 'Ce mois',
@@ -519,6 +539,24 @@ class AppStrings {
     'biggest_moves': 'Les plus grosses transactions',
     'biggest_expense': 'Plus grosse dépense',
     'biggest_income': 'Plus gros revenu',
+    'stats_monthly_summary':
+        'Vos revenus, dépenses et ce que vous avez épargné ce mois, plus votre taux d’épargne — la part de revenus que vous n’avez pas dépensée.',
+    'stats_spending_by_category':
+        'Répartition des dépenses du mois par catégorie. Plus la part est grande, plus vous avez dépensé dans cette catégorie.',
+    'stats_where_money_go':
+        'Catégories classées par total dépensé, avec la part (%) de chacune dans le mois. Touchez une catégorie pour voir ses transactions.',
+    'stats_trends':
+        'Revenus contre dépenses sur la période choisie (7 ou 30 jours, 3, 6 ou 12 mois). Le graphique compare l’argent entrant et sortant.',
+    'stats_compare_months':
+        'Le mois sélectionné à côté du mois précédent, avec la différence (+/-) des revenus et dépenses, et une courbe de tendance sur 6 mois.',
+    'stats_net_cashflow':
+        'Votre solde cumulé — revenus moins dépenses — sur les 6 derniers mois, pour voir si vous épargnez ou puisez dans vos économies.',
+    'stats_spending_habits':
+        'Moyenne dépensée par jour de la semaine sur les 8 dernières semaines, à l’échelle de votre journée la plus chargée, pour repérer vos jours de dépenses.',
+    'stats_monthly_pace':
+        'Vos dépenses moyennes par jour et le total de fin de mois projeté à ce rythme, avec un statut dans les temps / au-dessus de la cadence.',
+    'stats_biggest_moves':
+        'Les plus grosses dépenses et le plus gros revenu du mois en un coup d’œil.',
   };
 
   static const Map<String, String> _ar = {
@@ -583,6 +621,7 @@ class AppStrings {
     'clear': 'مسح',
     'apply': 'تطبيق',
     'statistics': 'الإحصائيات',
+    'more_info': 'عن هذه الإحصائية',
     'spending_by_category': 'المصروفات حسب الفئة',
     'where_money_go': 'إلى أين تذهب أموالي؟',
     'this_month': 'هذا الشهر',
@@ -766,6 +805,24 @@ class AppStrings {
     'biggest_moves': 'أكبر الحركات',
     'biggest_expense': 'أكبر مصروف',
     'biggest_income': 'أكبر دخل',
+    'stats_monthly_summary':
+        'دخلك ونفقاتك وما ادخرته هذا الشهر، بالإضافة إلى نسبة الادخار — الجزء من الدخل الذي لم تنفقه.',
+    'stats_spending_by_category':
+        'توزيع نفقات هذا الشهر حسب الفئة. كلما كانت الحصة أكبر، كلما أنفقت أكثر في تلك الفئة.',
+    'stats_where_money_go':
+        'الفئات مرتبة حسب إجمالي الإنفاق، مع النسبة المئوية (%) من إجمالي الشهر. اضغط على فئة لعرض معاملاتها.',
+    'stats_trends':
+        'الدخل مقابل المصاريف خلال الفترة التي تختارها (7 أو 30 يومًا، 3 أو 6 أو 12 شهرًا). يقارن الرسم البياني الأموال الواردة والصادرة.',
+    'stats_compare_months':
+        'الشهر المحدد بجانب الشهر السابق مع الفرق (+/-) في الدخل والمصاريف، وخط اتجاه يمتد لستة أشهر.',
+    'stats_net_cashflow':
+        'رصيدك التراكمي — الدخل ناقص المصاريف — خلال آخر 6 أشهر، لتعرف إن كنت تدّخر أو تستنزف مدخراتك.',
+    'stats_spending_habits':
+        'متوسط الإنفاق لكل يوم أسبوعي خلال آخر 8 أسابيع، مقارنةً بيومك الأكثر ازدحامًا، لاكتشاف أيام إنفاقك الأعلى.',
+    'stats_monthly_pace':
+        'متوسط إنفاقك اليومي وما يُتوقع إنفاقه نهاية الشهر بهذا المعدل، مع حالة داخل المسار / فوق الوتيرة.',
+    'stats_biggest_moves':
+        'أكبر المصروفات وأكبر دخل في الشهر في نظرة واحدة.',
   };
 
   /// Default expense category slug -> localized display name.

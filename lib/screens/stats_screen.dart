@@ -43,38 +43,20 @@ class _StatsScreenState extends State<StatsScreen> {
               const SizedBox(height: 16),
               _summaryCard(context, month),
               const SizedBox(height: 20),
-              SectionHeader(strings.tr('spending_by_category')),
-              const SizedBox(height: 12),
               _donut(context, month),
-              const SizedBox(height: 20),
-              SectionHeader(strings.tr('where_money_go')),
               const SizedBox(height: 12),
               _categoryList(context, month),
               const SizedBox(height: 24),
-              SectionHeader(strings.tr('trends')),
-              const SizedBox(height: 12),
-              _rangePill(context),
-              const SizedBox(height: 14),
               _trendChart(context),
               const SizedBox(height: 24),
-              SectionHeader(strings.tr('compare_months')),
-              const SizedBox(height: 12),
               _compareCard(context),
               const SizedBox(height: 24),
-              SectionHeader(strings.tr('net_cashflow')),
-              const SizedBox(height: 12),
               _cashflowCard(context),
               const SizedBox(height: 24),
-              SectionHeader(strings.tr('spending_habits')),
-              const SizedBox(height: 12),
               _weekdayCard(context),
               const SizedBox(height: 24),
-              SectionHeader(strings.tr('monthly_pace')),
-              const SizedBox(height: 12),
               _paceCard(context, month),
               const SizedBox(height: 24),
-              SectionHeader(strings.tr('biggest_moves')),
-              const SizedBox(height: 12),
               _biggestMoves(context, month),
             ],
           ),
@@ -105,7 +87,14 @@ class _StatsScreenState extends State<StatsScreen> {
     return SectionCard(
       padding: const EdgeInsets.all(16),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _cardTitle(
+            context,
+            strings.tr('monthly_summary'),
+            'stats_monthly_summary',
+          ),
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
@@ -214,6 +203,101 @@ class _StatsScreenState extends State<StatsScreen> {
     );
   }
 
+  Widget _cardTitle(BuildContext context, String title, String helpKey) {
+    final t = Theme.of(context);
+    final strings = context.watch<AppState>().strings;
+    return Row(
+      children: [
+        _infoIcon(context, strings.tr(helpKey)),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            title,
+            style: t.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _infoIcon(BuildContext context, String help) {
+    final t = Theme.of(context);
+    final strings = context.watch<AppState>().strings;
+    return Tooltip(
+      message: strings.tr('more_info'),
+      child: InkWell(
+        onTap: () => _showHelp(context, help),
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          width: 26,
+          height: 26,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: t.colorScheme.surfaceContainerHighest,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            Icons.priority_high_rounded,
+            size: 14,
+            color: t.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showHelp(BuildContext context, String help) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        final t = Theme.of(dialogContext);
+        final strings = context.watch<AppState>().strings;
+        return AlertDialog(
+          title: Row(
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: t.colorScheme.primary.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.priority_high_rounded,
+                  size: 16,
+                  color: t.colorScheme.primary,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  strings.tr('more_info'),
+                  style: t.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            help,
+            style: t.textTheme.bodyMedium?.copyWith(height: 1.6),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(strings.tr('ok')),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _donut(BuildContext context, DateTime month) {
     final state = context.watch<AppState>();
     final strings = state.strings;
@@ -246,7 +330,18 @@ class _StatsScreenState extends State<StatsScreen> {
     }
     return SectionCard(
       padding: const EdgeInsets.all(16),
-      child: DonutChart(slices: slices),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _cardTitle(
+            context,
+            strings.tr('spending_by_category'),
+            'stats_spending_by_category',
+          ),
+          const SizedBox(height: 12),
+          DonutChart(slices: slices),
+        ],
+      ),
     );
   }
 
@@ -271,7 +366,16 @@ class _StatsScreenState extends State<StatsScreen> {
     return SectionCard(
       padding: EdgeInsets.zero,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 2),
+            child: _cardTitle(
+              context,
+              strings.tr('where_money_go'),
+              'stats_where_money_go',
+            ),
+          ),
           for (var i = 0; i < totals.length; i++)
             InkWell(
               onTap:
@@ -419,6 +523,10 @@ class _StatsScreenState extends State<StatsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _cardTitle(context, strings.tr('trends'), 'stats_trends'),
+          const SizedBox(height: 12),
+          _rangePill(context),
+          const SizedBox(height: 12),
           _legendDot(
             context,
             AppColors.incomeOn(context),
@@ -474,6 +582,12 @@ class _StatsScreenState extends State<StatsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _cardTitle(
+            context,
+            strings.tr('compare_months'),
+            'stats_compare_months',
+          ),
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
@@ -646,7 +760,13 @@ class _StatsScreenState extends State<StatsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _cardTitle(
+            context,
+            strings.tr('net_cashflow'),
+            'stats_net_cashflow',
+          ),
           if (series.isNotEmpty) ...[
+            const SizedBox(height: 12),
             Text(
               state.money(series.last.$2),
               style: t.textTheme.titleMedium?.copyWith(
@@ -683,7 +803,14 @@ class _StatsScreenState extends State<StatsScreen> {
       child:
           hasData
               ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  _cardTitle(
+                    context,
+                    strings.tr('spending_habits'),
+                    'stats_spending_habits',
+                  ),
+                  const SizedBox(height: 8),
                   for (var i = 0; i < 7; i++)
                     _weekdayRow(context, i, avg[i], maxV),
                 ],
@@ -769,6 +896,12 @@ class _StatsScreenState extends State<StatsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _cardTitle(
+            context,
+            strings.tr('monthly_pace'),
+            'stats_monthly_pace',
+          ),
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
@@ -852,6 +985,12 @@ class _StatsScreenState extends State<StatsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _cardTitle(
+            context,
+            strings.tr('biggest_moves'),
+            'stats_biggest_moves',
+          ),
+          const SizedBox(height: 12),
           if (hasExp) ...[
             Text(
               strings.tr('biggest_expense'),

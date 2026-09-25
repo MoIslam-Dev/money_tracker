@@ -2,7 +2,7 @@ name: money_tracker
 description: "Personal money management app for Algeria — track income and expenses in DA."
 publish_to: 'none'
 
-version: 1.5.0+14
+version: 1.5.1+15
 
 environment:
   sdk: ^3.7.0
