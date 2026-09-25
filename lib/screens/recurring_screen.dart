@@ -62,11 +62,20 @@ class RecurringScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(strings.tr('committed_monthly'),
-              style: t.textTheme.labelMedium?.copyWith(color: t.colorScheme.onSurfaceVariant)),
+          Text(
+            strings.tr('committed_monthly'),
+            style: t.textTheme.labelMedium?.copyWith(
+              color: t.colorScheme.onSurfaceVariant,
+            ),
+          ),
           const SizedBox(height: 6),
-          Text('${formatDA(state.committedMonthly)} / ${strings.tr('per_month')}',
-              style: t.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800, color: AppColors.skyOn(context))),
+          Text(
+            '${state.money(state.committedMonthly)} / ${strings.tr('per_month')}',
+            style: t.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: AppColors.skyOn(context),
+            ),
+          ),
         ],
       ),
     );
@@ -77,7 +86,10 @@ class RecurringScreen extends StatelessWidget {
     final strings = state.strings;
     final t = Theme.of(context);
     final cat = state.categoryById(r.categoryId);
-    final color = r.isExpense ? AppColors.expenseOn(context) : AppColors.incomeOn(context);
+    final color =
+        r.isExpense
+            ? AppColors.expenseOn(context)
+            : AppColors.incomeOn(context);
     final next = r.isActive ? r.nextOccurrenceAfter(DateTime.now()) : null;
 
     return SectionCard(
@@ -94,7 +106,11 @@ class RecurringScreen extends StatelessWidget {
                   color: color.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(iconFor(cat?.icon ?? 'more_horiz'), color: color, size: 20),
+                child: Icon(
+                  iconFor(cat?.icon ?? 'more_horiz'),
+                  color: color,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -102,32 +118,54 @@ class RecurringScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                        cat == null
-                            ? strings.tr('other')
-                            : '${strings.categoryName(cat.name)} · ${strings.tr(r.frequency)}',
-                        style: t.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800)),
+                      cat == null
+                          ? strings.tr('other')
+                          : '${state.categoryLabel(cat)} · ${strings.tr(r.frequency)}',
+                      style: t.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
                     Text(
                       '${strings.tr(r.frequency)} · ${strings.tr('next_occurrence')}: ${next == null ? '—' : dateKey(next)}',
-                      style: t.textTheme.labelSmall?.copyWith(color: t.colorScheme.onSurfaceVariant),
+                      style: t.textTheme.labelSmall?.copyWith(
+                        color: t.colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
               ),
-              Text('${r.isExpense ? '- ' : '+ '}${formatDA(r.amount)}',
-                  style: TextStyle(color: color, fontWeight: FontWeight.w800)),
+              Text(
+                '${r.isExpense ? '- ' : '+ '}${state.moneyFor(r.amount, r.currency)}',
+                style: TextStyle(color: color, fontWeight: FontWeight.w800),
+              ),
               PopupMenuButton<String>(
                 onSelected: (v) => _action(context, r, v),
-                itemBuilder: (_) => [
-                  PopupMenuItem(value: 'log', child: Text(strings.tr('record_today'))),
-                  PopupMenuItem(value: 'edit', child: Text(strings.tr('edit'))),
-                  PopupMenuItem(value: 'delete', child: Text(strings.tr('delete'))),
-                ],
+                itemBuilder:
+                    (_) => [
+                      PopupMenuItem(
+                        value: 'log',
+                        child: Text(strings.tr('record_today')),
+                      ),
+                      PopupMenuItem(
+                        value: 'edit',
+                        child: Text(strings.tr('edit')),
+                      ),
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Text(strings.tr('delete')),
+                      ),
+                    ],
               ),
             ],
           ),
           if (r.note != null && r.note!.isNotEmpty) ...[
             const SizedBox(height: 8),
-            Text(r.note!, style: t.textTheme.bodySmall?.copyWith(color: t.colorScheme.onSurfaceVariant)),
+            Text(
+              r.note!,
+              style: t.textTheme.bodySmall?.copyWith(
+                color: t.colorScheme.onSurfaceVariant,
+              ),
+            ),
           ],
         ],
       ),
@@ -157,165 +195,233 @@ class RecurringScreen extends StatelessWidget {
       case 'delete':
         final ok = await showDialog<bool>(
           context: context,
-          builder: (ctx) => AlertDialog(
-            title: Text(strings.tr('confirm')),
-            content: Text(strings.tr('confirm_delete')),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(strings.tr('cancel'))),
-              FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(strings.tr('delete'))),
-            ],
-          ),
+          builder:
+              (ctx) => AlertDialog(
+                title: Text(strings.tr('confirm')),
+                content: Text(strings.tr('confirm_delete')),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    child: Text(strings.tr('cancel')),
+                  ),
+                  FilledButton(
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child: Text(strings.tr('delete')),
+                  ),
+                ],
+              ),
         );
         if (ok == true) await state.removeRecurring(r);
     }
   }
 
-  Future<void> _openEditor(BuildContext context, [RecurringTxn? editing]) async {
+  Future<void> _openEditor(
+    BuildContext context, [
+    RecurringTxn? editing,
+  ]) async {
     final state = context.read<AppState>();
     final strings = state.strings;
 
-    final amountCtrl = TextEditingController(text: editing == null ? '' : '${editing.amount}');
+    final amountCtrl = TextEditingController(
+      text: editing == null ? '' : '${editing.amount}',
+    );
     final noteCtrl = TextEditingController(text: editing?.note ?? '');
     var type = editing?.type ?? TxType.expense;
     String frequency = editing?.frequency ?? 'monthly';
     var categoryId = editing?.categoryId;
-    DateTime start = editing == null ? DateTime.now() : parseDateKey(editing.startDate);
-    DateTime? end = editing?.endDate == null ? null : parseDateKey(editing!.endDate!);
+    DateTime start =
+        editing == null ? DateTime.now() : parseDateKey(editing.startDate);
+    DateTime? end =
+        editing?.endDate == null ? null : parseDateKey(editing!.endDate!);
     String payment = editing?.paymentMethod ?? 'cash';
 
     await showDialog(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setState) {
-          final t = Theme.of(ctx);
-          return AlertDialog(
-            title: Text(editing == null ? strings.tr('add_recurring') : strings.tr('edit_recurring')),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SegmentedButton<String>(
-                    segments: [
-                      ButtonSegment(value: TxType.expense, label: Text(strings.tr('expense'))),
-                      ButtonSegment(value: TxType.income, label: Text(strings.tr('income'))),
-                    ],
-                    selected: {type},
-                    onSelectionChanged: (s) {
-                      setState(() {
-                        type = s.first;
-                        final okCat = categoryId != null && state.categoryById(categoryId)?.type == type;
-                        if (!okCat) categoryId = null;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                      controller: amountCtrl,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(labelText: strings.tr('amount'), prefixText: 'DA ')),
-                  const SizedBox(height: 12),
-                  Text(strings.tr('category'), style: t.textTheme.labelMedium),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: CategoryPicker(
-                      type: type,
-                      selectedId: categoryId,
-                      onSelected: (id) => setState(() => categoryId = id),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(strings.tr('frequency'), style: t.textTheme.labelMedium),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
+      builder:
+          (ctx) => StatefulBuilder(
+            builder: (ctx, setState) {
+              final t = Theme.of(ctx);
+              return AlertDialog(
+                title: Text(
+                  editing == null
+                      ? strings.tr('add_recurring')
+                      : strings.tr('edit_recurring'),
+                ),
+                content: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      for (final f in ['daily', 'weekly', 'monthly', 'yearly'])
-                        ChoiceChip(
-                          label: Text(strings.tr(f)),
-                          selected: frequency == f,
-                          onSelected: (_) => setState(() => frequency = f),
+                      SegmentedButton<String>(
+                        segments: [
+                          ButtonSegment(
+                            value: TxType.expense,
+                            label: Text(strings.tr('expense')),
+                          ),
+                          ButtonSegment(
+                            value: TxType.income,
+                            label: Text(strings.tr('income')),
+                          ),
+                        ],
+                        selected: {type},
+                        onSelectionChanged: (s) {
+                          setState(() {
+                            type = s.first;
+                            final okCat =
+                                categoryId != null &&
+                                state.categoryById(categoryId)?.type == type;
+                            if (!okCat) categoryId = null;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: amountCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: strings.tr('amount'),
+                          prefixText:
+                              '${state.currencyDefinition(editing?.currency ?? state.currency).symbol} ',
                         ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        strings.tr('category'),
+                        style: t.textTheme.labelMedium,
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: CategoryPicker(
+                          type: type,
+                          selectedId: categoryId,
+                          onSelected: (id) => setState(() => categoryId = id),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        strings.tr('frequency'),
+                        style: t.textTheme.labelMedium,
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          for (final f in [
+                            'daily',
+                            'weekly',
+                            'monthly',
+                            'yearly',
+                          ])
+                            ChoiceChip(
+                              label: Text(strings.tr(f)),
+                              selected: frequency == f,
+                              onSelected: (_) => setState(() => frequency = f),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      InkWell(
+                        onTap: () async {
+                          final p = await showDatePicker(
+                            context: ctx,
+                            initialDate: start,
+                            firstDate: DateTime(2000),
+                            lastDate: DateTime(2100),
+                            locale: Locale(state.strings.lang),
+                          );
+                          if (p != null) setState(() => start = p);
+                        },
+                        child: InputDecorator(
+                          decoration: InputDecoration(
+                            labelText: strings.tr('start_date'),
+                            suffixIcon: const Icon(
+                              Icons.calendar_today_rounded,
+                              size: 18,
+                            ),
+                          ),
+                          child: Text(dateKey(start)),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      InkWell(
+                        onTap: () async {
+                          final p = await showDatePicker(
+                            context: ctx,
+                            initialDate:
+                                end ??
+                                DateTime.now().add(const Duration(days: 365)),
+                            firstDate: DateTime(2000),
+                            lastDate: DateTime(2100),
+                            locale: Locale(state.strings.lang),
+                          );
+                          if (p != null) setState(() => end = p);
+                        },
+                        child: InputDecorator(
+                          decoration: InputDecoration(
+                            labelText: strings.tr('end_date'),
+                            suffixIcon: const Icon(
+                              Icons.calendar_today_rounded,
+                              size: 18,
+                            ),
+                          ),
+                          child: Text(
+                            end == null ? strings.tr('never') : dateKey(end!),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      PaymentChips(
+                        selected: payment,
+                        onChanged: (m) => setState(() => payment = m),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: noteCtrl,
+                        decoration: InputDecoration(
+                          labelText: strings.tr('note'),
+                        ),
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  InkWell(
-                    onTap: () async {
-                      final p = await showDatePicker(
-                        context: ctx,
-                        initialDate: start,
-                        firstDate: DateTime(2000),
-                        lastDate: DateTime(2100),
-                        locale: Locale(state.strings.lang),
-                      );
-                      if (p != null) setState(() => start = p);
-                    },
-                    child: InputDecorator(
-                      decoration: InputDecoration(
-                        labelText: strings.tr('start_date'),
-                        suffixIcon: const Icon(Icons.calendar_today_rounded, size: 18),
-                      ),
-                      child: Text(dateKey(start)),
-                    ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: Text(strings.tr('cancel')),
                   ),
-                  const SizedBox(height: 10),
-                  InkWell(
-                    onTap: () async {
-                      final p = await showDatePicker(
-                        context: ctx,
-                        initialDate: end ?? DateTime.now().add(const Duration(days: 365)),
-                        firstDate: DateTime(2000),
-                        lastDate: DateTime(2100),
-                        locale: Locale(state.strings.lang),
+                  FilledButton(
+                    onPressed: () async {
+                      final amount = parseAmount(amountCtrl.text);
+                      final cid =
+                          categoryId ??
+                          state.categoriesFor(type).firstOrNull?.id;
+                      if (amount == null || cid == null) return;
+                      await state.saveRecurring(
+                        id: editing?.id,
+                        type: type,
+                        amount: amount,
+                        categoryId: cid,
+                        frequency: frequency,
+                        start: start,
+                        end: end,
+                        paymentMethod: payment,
+                        note:
+                            noteCtrl.text.trim().isEmpty
+                                ? null
+                                : noteCtrl.text.trim(),
+                        isActive: editing?.isActive ?? true,
+                        currency: editing?.currency,
                       );
-                      if (p != null) setState(() => end = p);
+                      if (ctx.mounted) Navigator.pop(ctx);
                     },
-                    child: InputDecorator(
-                      decoration: InputDecoration(
-                        labelText: strings.tr('end_date'),
-                        suffixIcon: const Icon(Icons.calendar_today_rounded, size: 18),
-                      ),
-                      child: Text(end == null ? strings.tr('never') : dateKey(end!)),
-                    ),
+                    child: Text(strings.tr('saveexp')),
                   ),
-                  const SizedBox(height: 12),
-                  PaymentChips(selected: payment, onChanged: (m) => setState(() => payment = m)),
-                  const SizedBox(height: 12),
-                  TextField(
-                      controller: noteCtrl,
-                      decoration: InputDecoration(labelText: strings.tr('note'))),
                 ],
-              ),
-            ),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx), child: Text(strings.tr('cancel'))),
-              FilledButton(
-                onPressed: () async {
-                  final amount = parseAmount(amountCtrl.text);
-                  final cid = categoryId ?? state.categoriesFor(type).firstOrNull?.id;
-                  if (amount == null || cid == null) return;
-                  await state.saveRecurring(
-                    id: editing?.id,
-                    type: type,
-                    amount: amount,
-                    categoryId: cid,
-                    frequency: frequency,
-                    start: start,
-                    end: end,
-                    paymentMethod: payment,
-                    note: noteCtrl.text.trim().isEmpty ? null : noteCtrl.text.trim(),
-                    isActive: editing?.isActive ?? true,
-                  );
-                  if (ctx.mounted) Navigator.pop(ctx);
-                },
-                child: Text(strings.tr('saveexp')),
-              ),
-            ],
-          );
-        },
-      ),
+              );
+            },
+          ),
     );
   }
 }

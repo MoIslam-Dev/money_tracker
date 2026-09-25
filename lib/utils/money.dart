@@ -1,7 +1,7 @@
 /// Money + date formatting helpers.
-///
-/// Money is always an [int] in DA. No floats ever touch money values.
 library;
+
+import '../models/currency.dart' as money_currency;
 
 final RegExp _digitScan = RegExp(r'\d');
 
@@ -16,29 +16,56 @@ String formatDA(int amount) {
   }
   return '${neg ? '-' : ''}$buf DA';
 }
+
 /// Format [amount] in the given [currency] for the current [lang].
 /// Digit order is preserved (RTL-safe), sign sticks to the digits, and the
 /// currency symbol is separated by a thin space, localized under LRI/PDI
 /// isolates so Arabic UIs render `-2 500 DA` not `DA 750 2 -`.
 ///
 /// [symbolBefore] controls DA-style `85 000 DA` vs `85 000 €` ordering.
-String formatMoney(int amount, String lang, String currencyCode,
-    {bool symbolBefore = false}) {
+/// When [currency] is provided its registry metadata (symbol, ordering,
+/// localized names) wins over the bare [currencyCode].
+String formatMoney(
+  int amount,
+  String lang,
+  String currencyCode, {
+  bool symbolBefore = false,
+  money_currency.AppCurrency? currency,
+}) {
+  final resolved = currency ?? money_currency.resolveCurrency(currencyCode);
   return _formatWithSymbol(
-      formatDA(amount).trim(),
-      currencySymbol(currencyCode),
-      lang,
-      symbolBefore);
+    _group(amount, '\u2009'),
+    resolved.symbol,
+    lang,
+    resolved.symbolBefore || symbolBefore,
+  );
 }
 
 /// Compact chart form of [formatMoney]: `85k`, `2.5M`.
-String formatMoneyShort(int amount, String lang, String currencyCode,
-    {bool symbolBefore = false}) {
+String formatMoneyShort(
+  int amount,
+  String lang,
+  String currencyCode, {
+  bool symbolBefore = false,
+  money_currency.AppCurrency? currency,
+}) {
+  final resolved = currency ?? money_currency.resolveCurrency(currencyCode);
   return _formatWithSymbol(
-      formatDAShort(amount), currencySymbol(currencyCode), lang, symbolBefore);
+    formatDAShort(amount),
+    resolved.symbol,
+    lang,
+    resolved.symbolBefore || symbolBefore,
+  );
 }
 
-/// Full, localized symbol for [code] — `DA`, `DA`, `DZD`, `د.ج`, `€`…
+/// Strip LRI/PDI isolates for plain-text comparisons.
+String stripIsolates(String value) => value
+    .replaceAll('\u2066', '')
+    .replaceAll('\u2067', '')
+    .replaceAll('\u2068', '')
+    .replaceAll('\u2069', '');
+
+/// Full, localized symbol for [code] — `DA`, `CA$`, `DZD`, `د.ج`, `€`…
 String currencySymbol(String code) {
   switch (code) {
     case 'DZD':
@@ -49,6 +76,8 @@ String currencySymbol(String code) {
       return r'$';
     case 'GBP':
       return '£';
+    case 'CAD':
+      return r'CA$';
     case 'CHF':
       return 'CHF';
     case 'MAD':
@@ -58,12 +87,16 @@ String currencySymbol(String code) {
     case 'TND':
       return 'د.ت';
     default:
-      return code;
+      return money_currency.resolveCurrency(code).symbol;
   }
 }
 
 String _formatWithSymbol(
-    String value, String symbol, String lang, bool symbolBefore) {
+  String value,
+  String symbol,
+  String lang,
+  bool symbolBefore,
+) {
   final lri = '\u2066';
   final pdi = '\u2069';
   final sep = lang == 'ar' ? '\u2009' : ' ';
@@ -73,13 +106,13 @@ String _formatWithSymbol(
   return '$lri$value$sep$symbol$pdi';
 }
 
-
 /// Compact form used inside charts: `85k`, `2.5M`.
 String formatDAShort(int amount) {
   final a = amount.abs();
-  final s = a >= 1000000
-      ? '${(a / 1000000).toStringAsFixed(1).replaceFirst('.0', '')}M'
-      : a >= 1000
+  final s =
+      a >= 1000000
+          ? '${(a / 1000000).toStringAsFixed(1).replaceFirst('.0', '')}M'
+          : a >= 1000
           ? '${(a / 1000).toStringAsFixed(1).replaceFirst('.0', '')}k'
           : '$a';
   return '${amount < 0 ? '-' : ''}$s';
@@ -107,21 +140,85 @@ String nowIso() => DateTime.now().toIso8601String();
 
 /// Localized day/month name for the current language code.
 String monthName(int month, String lang) {
-  const en = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-  const fr = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
-  const ar = ['جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان', 'جويلية', 'أوت', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+  const en = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+  const fr = [
+    'Janvier',
+    'Février',
+    'Mars',
+    'Avril',
+    'Mai',
+    'Juin',
+    'Juillet',
+    'Août',
+    'Septembre',
+    'Octobre',
+    'Novembre',
+    'Décembre',
+  ];
+  const ar = [
+    'جانفي',
+    'فيفري',
+    'مارس',
+    'أفريل',
+    'ماي',
+    'جوان',
+    'جويلية',
+    'أوت',
+    'سبتمبر',
+    'أكتوبر',
+    'نوفمبر',
+    'ديسمبر',
+  ];
   if (lang == 'ar') return ar[month - 1];
   if (lang == 'fr') return fr[month - 1];
   return en[month - 1];
 }
 
 String weekdayName(int weekday, String lang, {bool short = false}) {
-  const en = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-  const fr = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
-  const ar = ['الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت', 'الأحد'];
-  final list = lang == 'ar'
-      ? ar
-      : lang == 'fr'
+  const en = [
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
+  ];
+  const fr = [
+    'Lundi',
+    'Mardi',
+    'Mercredi',
+    'Jeudi',
+    'Vendredi',
+    'Samedi',
+    'Dimanche',
+  ];
+  const ar = [
+    'الإثنين',
+    'الثلاثاء',
+    'الأربعاء',
+    'الخميس',
+    'الجمعة',
+    'السبت',
+    'الأحد',
+  ];
+  final list =
+      lang == 'ar'
+          ? ar
+          : lang == 'fr'
           ? fr
           : en;
   final name = list[weekday - 1];
@@ -130,9 +227,48 @@ String weekdayName(int weekday, String lang, {bool short = false}) {
 }
 
 String monthShort(int month, String lang) {
-  const en = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const fr = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
-  const ar = ['جان', 'فيف', 'مار', 'أفر', 'ماي', 'جوا', 'جويل', 'أوت', 'سب', 'أكت', 'نوف', 'ديس'];
+  const en = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+  const fr = [
+    'Jan',
+    'Fév',
+    'Mar',
+    'Avr',
+    'Mai',
+    'Juin',
+    'Juil',
+    'Août',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Déc',
+  ];
+  const ar = [
+    'جان',
+    'فيف',
+    'مار',
+    'أفر',
+    'ماي',
+    'جوا',
+    'جويل',
+    'أوت',
+    'سب',
+    'أكت',
+    'نوف',
+    'ديس',
+  ];
   if (lang == 'ar') return ar[month - 1];
   if (lang == 'fr') return fr[month - 1];
   return en[month - 1];

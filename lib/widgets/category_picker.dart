@@ -7,10 +7,30 @@ import 'icons.dart';
 
 /// Icons offered when creating a custom category.
 const customCategoryIcons = [
-  'restaurant', 'coffee', 'shopping_cart', 'directions_bus', 'home', 'bolt',
-  'wifi', 'medical_services', 'checkroom', 'movie', 'school', 'devices',
-  'family_restroom', 'card_giftcard', 'savings', 'more_horiz', 'payments',
-  'computer', 'storefront', 'redeem', 'trending_up', 'currency_exchange', 'local_gas_station', 'phone_android',
+  'restaurant',
+  'coffee',
+  'shopping_cart',
+  'directions_bus',
+  'home',
+  'bolt',
+  'wifi',
+  'medical_services',
+  'checkroom',
+  'movie',
+  'school',
+  'devices',
+  'family_restroom',
+  'card_giftcard',
+  'savings',
+  'more_horiz',
+  'payments',
+  'computer',
+  'storefront',
+  'redeem',
+  'trending_up',
+  'currency_exchange',
+  'local_gas_station',
+  'phone_android',
 ];
 
 class CategoryPicker extends StatelessWidget {
@@ -34,33 +54,47 @@ class CategoryPicker extends StatelessWidget {
     final strings = state.strings;
     final t = Theme.of(context);
     final cats = state.categoriesFor(type);
-    final recents = recentIds
-        .map(state.categoryById)
-        .whereType<AppCategory>()
-        .where((c) => c.type == type)
-        .take(6)
-        .toList();
+    final recents =
+        recentIds
+            .map(state.categoryById)
+            .whereType<AppCategory>()
+            .where((c) => c.type == type)
+            .take(6)
+            .toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (recents.isNotEmpty) ...[
-          Text(strings.tr('recent').toUpperCase(),
-              style: t.textTheme.labelSmall?.copyWith(
-                  fontWeight: FontWeight.w700, color: t.colorScheme.onSurfaceVariant)),
+          Text(
+            strings.tr('recent').toUpperCase(),
+            style: t.textTheme.labelSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: t.colorScheme.onSurfaceVariant,
+            ),
+          ),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
               for (final c in recents)
-                _item(context, strings.categoryName(c.name), iconFor(c.icon),
-                    c.id == selectedId, () => onSelected(c.id!)),
+                _item(
+                  context,
+                  state.categoryLabel(c),
+                  iconFor(c.icon),
+                  c.id == selectedId,
+                  () => onSelected(c.id!),
+                ),
             ],
           ),
           const SizedBox(height: 14),
-          Text(strings.tr('category').toUpperCase(),
-              style: t.textTheme.labelSmall?.copyWith(
-                  fontWeight: FontWeight.w700, color: t.colorScheme.onSurfaceVariant)),
+          Text(
+            strings.tr('category').toUpperCase(),
+            style: t.textTheme.labelSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: t.colorScheme.onSurfaceVariant,
+            ),
+          ),
           const SizedBox(height: 8),
         ],
         Wrap(
@@ -68,18 +102,41 @@ class CategoryPicker extends StatelessWidget {
           runSpacing: 8,
           children: [
             for (final c in cats)
-              _item(context, strings.categoryName(c.name), iconFor(c.icon), c.id == selectedId, () => onSelected(c.id!)),
+              _item(
+                context,
+                state.categoryLabel(c),
+                iconFor(c.icon),
+                c.id == selectedId,
+                () => onSelected(c.id!),
+              ),
             if (onCreateCustom != null)
-              _item(context, '+', Icons.add_rounded, false, onCreateCustom!, dimmed: true),
+              _item(
+                context,
+                '+',
+                Icons.add_rounded,
+                false,
+                onCreateCustom!,
+                dimmed: true,
+              ),
           ],
         ),
       ],
     );
   }
 
-  Widget _item(BuildContext context, String label, IconData icon, bool selected, VoidCallback onTap, {bool dimmed = false}) {
+  Widget _item(
+    BuildContext context,
+    String label,
+    IconData icon,
+    bool selected,
+    VoidCallback onTap, {
+    bool dimmed = false,
+  }) {
     final t = Theme.of(context);
-    final fg = selected ? t.colorScheme.onPrimary : (dimmed ? t.colorScheme.outline : t.colorScheme.onSurface);
+    final fg =
+        selected
+            ? t.colorScheme.onPrimary
+            : (dimmed ? t.colorScheme.outline : t.colorScheme.onSurface);
     return InkWell(
       borderRadius: BorderRadius.circular(16),
       onTap: onTap,
@@ -87,7 +144,10 @@ class CategoryPicker extends StatelessWidget {
         width: 76,
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         decoration: BoxDecoration(
-          color: selected ? t.colorScheme.primary : t.colorScheme.surfaceContainerHighest,
+          color:
+              selected
+                  ? t.colorScheme.primary
+                  : t.colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
@@ -95,10 +155,16 @@ class CategoryPicker extends StatelessWidget {
           children: [
             Icon(icon, color: fg, size: 22),
             const SizedBox(height: 4),
-            Text(label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: fg, fontWeight: FontWeight.w600, fontSize: 11)),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: fg,
+                fontWeight: FontWeight.w600,
+                fontSize: 11,
+              ),
+            ),
           ],
         ),
       ),
@@ -107,107 +173,190 @@ class CategoryPicker extends StatelessWidget {
 }
 
 /// Opens the custom-category creation dialog and returns true if created.
-Future<bool> showCreateCategory(BuildContext context, String type) => showCategoryForm(context, type);
+Future<bool> showCreateCategory(BuildContext context, String type) =>
+    showCategoryForm(context, type);
 
 /// Opens the rename-category dialog and returns true if renamed.
 Future<bool> showRenameCategory(BuildContext context, AppCategory category) =>
     showCategoryForm(context, category.type, editing: category);
 
 /// Shared create / rename dialog for categories.
-Future<bool> showCategoryForm(BuildContext context, String type, {AppCategory? editing}) async {
+Future<bool> showCategoryForm(
+  BuildContext context,
+  String type, {
+  AppCategory? editing,
+}) async {
   final state = context.read<AppState>();
   final strings = state.strings;
-  final nameController = TextEditingController(
-      text: editing == null ? '' : strings.categoryName(editing.name));
+  final defaults =
+      editing == null
+          ? ('', '', '')
+          : editing.hasLocalizedNames
+          ? (editing.nameEn, editing.nameFr, editing.nameAr)
+          : strings.categoryNames(editing.name);
+  final nameEnController = TextEditingController(text: defaults.$1);
+  final nameFrController = TextEditingController(text: defaults.$2);
+  final nameArController = TextEditingController(text: defaults.$3);
   var selectedIcon = editing?.icon ?? 'more_horiz';
   final created = await showDialog<bool>(
     context: context,
-    builder: (ctx) => StatefulBuilder(
-      builder: (ctx, setState) {
-        Future<void> submit() async {
-          final trimmed = nameController.text.trim();
-          if (trimmed.isEmpty) return;
-          Navigator.pop(ctx, true);
-          if (editing == null) {
-            await state.addCustomCategory(trimmed, selectedIcon, type);
-          } else {
-            await state.renameCategory(editing, trimmed);
-          }
-        }
-
-        return AlertDialog(
-          title: Text(editing == null ? strings.tr('add_category') : strings.tr('rename_category')),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TextField(
-                    controller: nameController,
-                    autofocus: true,
-                    textInputAction: TextInputAction.done,
-                    onSubmitted: (_) => submit(),
-                    decoration: InputDecoration(
-                      labelText: strings.tr('category_name'),
-                      hintText: strings.tr('custom'),
-                    ),
+    builder:
+        (ctx) => StatefulBuilder(
+          builder: (ctx, setState) {
+            Future<void> submit() async {
+              final en = nameEnController.text.trim();
+              final fr = nameFrController.text.trim();
+              final ar = nameArController.text.trim();
+              if (en.isEmpty || fr.isEmpty || ar.isEmpty) {
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  SnackBar(
+                    content: Text(strings.tr('category_names_required')),
                   ),
-                  if (editing == null) ...[
-                    const SizedBox(height: 16),
-                    Text(strings.tr('choose_icon'),
-                        style: Theme.of(ctx).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700)),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: [
-                        for (final icon in customCategoryIcons)
-                          InkWell(
-                            borderRadius: BorderRadius.circular(10),
-                            onTap: () => setState(() => selectedIcon = icon),
-                            child: Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: selectedIcon == icon
-                                    ? Theme.of(ctx).colorScheme.primary
-                                    : Theme.of(ctx).colorScheme.surfaceContainerHighest,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Icon(iconFor(icon),
-                                  size: 20,
-                                  color: selectedIcon == icon
-                                      ? Theme.of(ctx).colorScheme.onPrimary
-                                      : Theme.of(ctx).colorScheme.onSurface),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ],
-                ],
+                );
+                return;
+              }
+              Navigator.pop(ctx, true);
+              if (editing == null) {
+                await state.addCustomCategory(
+                  en,
+                  selectedIcon,
+                  type,
+                  nameFr: fr,
+                  nameAr: ar,
+                );
+              } else {
+                await state.renameCategory(
+                  editing,
+                  en,
+                  nameEn: en,
+                  nameFr: fr,
+                  nameAr: ar,
+                );
+              }
+            }
+
+            return AlertDialog(
+              title: Text(
+                editing == null
+                    ? strings.tr('add_category')
+                    : strings.tr('rename_category'),
               ),
-            ),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(strings.tr('cancel'))),
-            FilledButton(
-              onPressed: submit,
-              child: Text(editing == null ? strings.tr('create') : strings.tr('saveexp')),
-            ),
-          ],
-        );
-      },
-    ),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextField(
+                        controller: nameEnController,
+                        autofocus: true,
+                        textDirection: TextDirection.ltr,
+                        textInputAction: TextInputAction.next,
+                        decoration: InputDecoration(
+                          labelText: strings.tr('category_name_en'),
+                        ),
+                      ),
+                      TextField(
+                        controller: nameFrController,
+                        textDirection: TextDirection.ltr,
+                        textInputAction: TextInputAction.next,
+                        decoration: InputDecoration(
+                          labelText: strings.tr('category_name_fr'),
+                        ),
+                      ),
+                      TextField(
+                        controller: nameArController,
+                        textDirection: TextDirection.rtl,
+                        textInputAction: TextInputAction.done,
+                        onSubmitted: (_) => submit(),
+                        decoration: InputDecoration(
+                          labelText: strings.tr('category_name_ar'),
+                        ),
+                      ),
+                      if (editing == null) ...[
+                        const SizedBox(height: 16),
+                        Text(
+                          strings.tr('choose_icon'),
+                          style: Theme.of(ctx).textTheme.labelLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: [
+                            for (final icon in customCategoryIcons)
+                              InkWell(
+                                borderRadius: BorderRadius.circular(10),
+                                onTap:
+                                    () => setState(() => selectedIcon = icon),
+                                child: Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color:
+                                        selectedIcon == icon
+                                            ? Theme.of(ctx).colorScheme.primary
+                                            : Theme.of(ctx)
+                                                .colorScheme
+                                                .surfaceContainerHighest,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Icon(
+                                    iconFor(icon),
+                                    size: 20,
+                                    color:
+                                        selectedIcon == icon
+                                            ? Theme.of(
+                                              ctx,
+                                            ).colorScheme.onPrimary
+                                            : Theme.of(
+                                              ctx,
+                                            ).colorScheme.onSurface,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: Text(strings.tr('cancel')),
+                ),
+                FilledButton(
+                  onPressed: submit,
+                  child: Text(
+                    editing == null
+                        ? strings.tr('create')
+                        : strings.tr('saveexp'),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
   );
+  nameEnController.dispose();
+  nameFrController.dispose();
+  nameArController.dispose();
   return created ?? false;
 }
 
 class PaymentChips extends StatelessWidget {
   final String selected;
   final ValueChanged<String> onChanged;
-  const PaymentChips({super.key, required this.selected, required this.onChanged});
+  const PaymentChips({
+    super.key,
+    required this.selected,
+    required this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {

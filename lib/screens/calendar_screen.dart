@@ -47,8 +47,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
             MonthSelector(
               month: _month,
               label: '${monthName(_month.month, strings.lang)} ${_month.year}',
-              onPrev: () => setState(() => _month = DateTime(_month.year, _month.month - 1)),
-              onNext: () => setState(() => _month = DateTime(_month.year, _month.month + 1)),
+              onPrev:
+                  () => setState(
+                    () => _month = DateTime(_month.year, _month.month - 1),
+                  ),
+              onNext:
+                  () => setState(
+                    () => _month = DateTime(_month.year, _month.month + 1),
+                  ),
             ),
             const SizedBox(height: 12),
             SectionCard(
@@ -63,7 +69,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
                             weekdayShort((i + 6) % 7 + 1, strings.lang),
                             textAlign: TextAlign.center,
                             style: t.textTheme.labelSmall?.copyWith(
-                                fontWeight: FontWeight.w800, color: t.colorScheme.onSurfaceVariant),
+                              fontWeight: FontWeight.w800,
+                              color: t.colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ),
                     ],
@@ -77,9 +85,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     crossAxisSpacing: 4,
                     childAspectRatio: 0.9,
                     children: [
-                      for (var i = 0; i < leadingBlanks; i++) const SizedBox.shrink(),
+                      for (var i = 0; i < leadingBlanks; i++)
+                        const SizedBox.shrink(),
                       for (var d = 1; d <= daysInMonth; d++)
-                        _dayCell(context, DateTime(_month.year, _month.month, d)),
+                        _dayCell(
+                          context,
+                          DateTime(_month.year, _month.month, d),
+                        ),
                     ],
                   ),
                 ],
@@ -110,35 +122,51 @@ class _CalendarScreenState extends State<CalendarScreen> {
         decoration: BoxDecoration(
           color: selected ? t.colorScheme.primary : null,
           borderRadius: BorderRadius.circular(10),
-          border: isToday && !selected ? Border.all(color: t.colorScheme.primary, width: 1.2) : null,
+          border:
+              isToday && !selected
+                  ? Border.all(color: t.colorScheme.primary, width: 1.2)
+                  : null,
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('${day.day}',
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
-                  color: selected
-                      ? t.colorScheme.onPrimary
-                      : isToday
-                          ? t.colorScheme.primary
-                          : t.colorScheme.onSurface,
-                )),
+            Text(
+              '${day.day}',
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+                color:
+                    selected
+                        ? t.colorScheme.onPrimary
+                        : isToday
+                        ? t.colorScheme.primary
+                        : t.colorScheme.onSurface,
+              ),
+            ),
             const SizedBox(height: 2),
             if (hasTx)
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  if (exp > 0) Container(
+                  if (exp > 0)
+                    Container(
                       width: 5,
                       height: 5,
-                      decoration: BoxDecoration(color: AppColors.expenseOn(context), shape: BoxShape.circle)),
+                      decoration: BoxDecoration(
+                        color: AppColors.expenseOn(context),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
                   const SizedBox(width: 2),
-                  if (inc > 0) Container(
+                  if (inc > 0)
+                    Container(
                       width: 5,
                       height: 5,
-                      decoration: BoxDecoration(color: AppColors.incomeOn(context), shape: BoxShape.circle)),
+                      decoration: BoxDecoration(
+                        color: AppColors.incomeOn(context),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
                 ],
               )
             else
@@ -156,10 +184,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
     final day = parseDateKey(_selected!);
     final inc = state.incomesOn(day);
     final exp = state.expensesOn(day);
-    final dayTx = state.transactions
-        .where((x) => x.date == _selected)
-        .toList()
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final dayTx =
+        state.transactions.where((x) => x.date == _selected).toList()
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -169,16 +196,19 @@ class _CalendarScreenState extends State<CalendarScreen> {
             Expanded(
               child: Text(
                 '${day.day} ${monthName(day.month, strings.lang)} ${day.year}',
-                style: t.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                style: t.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
             IconButton(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-builder: (_) => AddEditScreen(type: TxType.expense),
-                ),
-              ),
+              onPressed:
+                  () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => AddEditScreen(type: TxType.expense),
+                    ),
+                  ),
               icon: const Icon(Icons.add_rounded),
               tooltip: strings.tr('add_expense'),
             ),
@@ -190,15 +220,25 @@ builder: (_) => AddEditScreen(type: TxType.expense),
           child: Row(
             children: [
               Expanded(
-                child: _netStat(strings.tr('income'), '+${formatDA(inc)}', AppColors.incomeOn(context)),
+                child: _netStat(
+                  strings.tr('income'),
+                  '+${state.money(inc)}',
+                  AppColors.incomeOn(context),
+                ),
               ),
               Expanded(
-                child: _netStat(strings.tr('expenses'), '-${formatDA(exp)}', AppColors.expenseOn(context)),
+                child: _netStat(
+                  strings.tr('expenses'),
+                  '-${state.money(exp)}',
+                  AppColors.expenseOn(context),
+                ),
               ),
               Expanded(
-                child: _netStat(strings.tr('daily_net'),
-                    '${inc - exp >= 0 ? '+' : '-'}${formatDA((inc - exp).abs())}',
-                    t.colorScheme.primary),
+                child: _netStat(
+                  strings.tr('daily_net'),
+                  '${inc - exp >= 0 ? '+' : '-'}${state.money((inc - exp).abs())}',
+                  t.colorScheme.primary,
+                ),
               ),
             ],
           ),
@@ -208,8 +248,12 @@ builder: (_) => AddEditScreen(type: TxType.expense),
           Center(
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 24),
-              child: Text(strings.tr('no_data_chart'),
-                  style: t.textTheme.bodyMedium?.copyWith(color: t.colorScheme.onSurfaceVariant)),
+              child: Text(
+                strings.tr('no_data_chart'),
+                style: t.textTheme.bodyMedium?.copyWith(
+                  color: t.colorScheme.onSurfaceVariant,
+                ),
+              ),
             ),
           )
         else
@@ -227,13 +271,23 @@ builder: (_) => AddEditScreen(type: TxType.expense),
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: t.textTheme.labelSmall?.copyWith(color: t.colorScheme.onSurfaceVariant)),
+        Text(
+          label,
+          style: t.textTheme.labelSmall?.copyWith(
+            color: t.colorScheme.onSurfaceVariant,
+          ),
+        ),
         const SizedBox(height: 2),
-        Text(value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: color, fontWeight: FontWeight.w800, fontSize: 13)),
+        Text(
+          value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: color,
+            fontWeight: FontWeight.w800,
+            fontSize: 13,
+          ),
+        ),
       ],
     );
   }
@@ -243,26 +297,39 @@ builder: (_) => AddEditScreen(type: TxType.expense),
     final strings = state.strings;
     final t = Theme.of(context);
     final cat = state.categoryById(tx.categoryId);
-    final color = tx.isExpense ? AppColors.expenseOn(context) : AppColors.incomeOn(context);
+    final color =
+        tx.isExpense
+            ? AppColors.expenseOn(context)
+            : AppColors.incomeOn(context);
     return SectionCard(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       child: Row(
         children: [
-          Text(tx.date,
-              style: t.textTheme.labelSmall?.copyWith(color: t.colorScheme.onSurfaceVariant)),
+          Text(
+            tx.date,
+            style: t.textTheme.labelSmall?.copyWith(
+              color: t.colorScheme.onSurfaceVariant,
+            ),
+          ),
           Expanded(
             child: Text(
-              [cat == null ? strings.tr('other') : strings.categoryName(cat.name),
-               if (tx.note != null && tx.note!.isNotEmpty) tx.note].join(' · '),
+              [
+                cat == null ? strings.tr('other') : state.categoryLabel(cat),
+                if (tx.note != null && tx.note!.isNotEmpty) tx.note,
+              ].join(' · '),
               textAlign: TextAlign.end,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: t.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+              style: t.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
           const SizedBox(width: 8),
-          Text('${tx.isExpense ? '- ' : '+ '}${formatDA(tx.amount)}',
-              style: TextStyle(color: color, fontWeight: FontWeight.w800)),
+          Text(
+            '${tx.isExpense ? '- ' : '+ '}${state.moneyFor(tx.amount, tx.currency)}',
+            style: TextStyle(color: color, fontWeight: FontWeight.w800),
+          ),
         ],
       ),
     );

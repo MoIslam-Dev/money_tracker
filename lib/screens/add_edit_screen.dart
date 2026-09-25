@@ -35,9 +35,12 @@ class _AddEditScreenState extends State<AddEditScreen> {
     _type = widget.type;
     _amountCtrl = TextEditingController(text: e == null ? '' : '${e.amount}');
     _categoryId = e?.categoryId;
-    _payment = e?.paymentMethod.isNotEmpty == true
-        ? e!.paymentMethod
-        : (state.settings.lastPayment.isNotEmpty ? state.settings.lastPayment : 'cash');
+    _payment =
+        e?.paymentMethod.isNotEmpty == true
+            ? e!.paymentMethod
+            : (state.settings.lastPayment.isNotEmpty
+                ? state.settings.lastPayment
+                : 'cash');
     _date = e == null ? DateTime.now() : parseDateKey(e.date);
     _noteCtrl = TextEditingController(text: e?.note ?? '');
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -80,6 +83,7 @@ class _AddEditScreenState extends State<AddEditScreen> {
       return;
     }
     final navigator = Navigator.of(context);
+    final currency = widget.editing?.currency ?? state.currency;
     if (widget.editing == null) {
       await state.addTransaction(
         type: _type,
@@ -88,6 +92,7 @@ class _AddEditScreenState extends State<AddEditScreen> {
         paymentMethod: _payment,
         date: _date,
         note: _noteCtrl.text,
+        currency: currency,
       );
     } else {
       await state.updateTransaction(
@@ -98,12 +103,13 @@ class _AddEditScreenState extends State<AddEditScreen> {
         paymentMethod: _payment,
         date: _date,
         note: _noteCtrl.text,
+        currency: currency,
       );
     }
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(strings.tr('transaction_saved'))),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(strings.tr('transaction_saved'))));
       navigator.pop();
     }
   }
@@ -121,7 +127,11 @@ class _AddEditScreenState extends State<AddEditScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(editing ? strings.tr('edit_transaction') : strings.tr('new_transaction')),
+        title: Text(
+          editing
+              ? strings.tr('edit_transaction')
+              : strings.tr('new_transaction'),
+        ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -138,30 +148,35 @@ class _AddEditScreenState extends State<AddEditScreen> {
                 ),
                 child: Row(
                   children: [
-                    Expanded(
-                      child: _typeButton(context, TxType.expense),
-                    ),
-                    Expanded(
-                      child: _typeButton(context, TxType.income),
-                    ),
+                    Expanded(child: _typeButton(context, TxType.expense)),
+                    Expanded(child: _typeButton(context, TxType.income)),
                   ],
                 ),
               ),
               const SizedBox(height: 24),
-              Text(strings.tr('amount'),
-                  style: t.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+              Text(
+                strings.tr('amount'),
+                style: t.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
               const SizedBox(height: 10),
               AmountField(
                 controller: _amountCtrl,
                 focusNode: _amountFocus,
                 hint: '0',
+                currency: widget.editing?.currency,
                 onChanged: (_) {},
               ),
               const SizedBox(height: 24),
               Row(
                 children: [
-                  Text(strings.tr('category'),
-                      style: t.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                  Text(
+                    strings.tr('category'),
+                    style: t.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                   const Spacer(),
                   TextButton.icon(
                     onPressed: () async {
@@ -182,8 +197,12 @@ class _AddEditScreenState extends State<AddEditScreen> {
                 onSelected: (id) => setState(() => _categoryId = id),
               ),
               const SizedBox(height: 24),
-              Text(strings.tr('payment_method'),
-                  style: t.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+              Text(
+                strings.tr('payment_method'),
+                style: t.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
               const SizedBox(height: 10),
               PaymentChips(
                 selected: _payment,
@@ -202,8 +221,12 @@ class _AddEditScreenState extends State<AddEditScreen> {
                 ],
               ),
               const SizedBox(height: 20),
-              Text(strings.tr('note'),
-                  style: t.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+              Text(
+                strings.tr('note'),
+                style: t.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
               const SizedBox(height: 10),
               TextField(
                 controller: _noteCtrl,
@@ -213,7 +236,10 @@ class _AddEditScreenState extends State<AddEditScreen> {
               BigButton(
                 label: strings.tr('save'),
                 icon: Icons.check_rounded,
-                color: _type == TxType.expense ? AppColors.expense : AppColors.income,
+                color:
+                    _type == TxType.expense
+                        ? AppColors.expense
+                        : AppColors.income,
                 onPressed: _save,
               ),
             ],
@@ -229,9 +255,19 @@ class _AddEditScreenState extends State<AddEditScreen> {
     final today = DateTime.now();
     String day;
     if (dateKey(d) == dateKey(today)) {
-      day = strings.lang == 'ar' ? 'اليوم' : strings.lang == 'fr' ? "Aujourd'hui" : 'Today';
+      day =
+          strings.lang == 'ar'
+              ? 'اليوم'
+              : strings.lang == 'fr'
+              ? "Aujourd'hui"
+              : 'Today';
     } else if (dateKey(d) == dateKey(today.subtract(const Duration(days: 1)))) {
-      day = strings.lang == 'ar' ? 'أمس' : strings.lang == 'fr' ? 'Hier' : 'Yesterday';
+      day =
+          strings.lang == 'ar'
+              ? 'أمس'
+              : strings.lang == 'fr'
+              ? 'Hier'
+              : 'Yesterday';
     } else {
       day = '${d.day} ${monthName(d.month, strings.lang)} ${d.year}';
     }
@@ -249,7 +285,8 @@ class _AddEditScreenState extends State<AddEditScreen> {
       onTap: () {
         setState(() {
           _type = type;
-          final hasInNew = _categoryId != null &&
+          final hasInNew =
+              _categoryId != null &&
               context.read<AppState>().categoryById(_categoryId)?.type == type;
           if (!hasInNew) _categoryId = null;
         });
@@ -265,7 +302,11 @@ class _AddEditScreenState extends State<AddEditScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              selected ? Icons.check_circle_rounded : (isExp ? Icons.south_west_rounded : Icons.north_east_rounded),
+              selected
+                  ? Icons.check_circle_rounded
+                  : (isExp
+                      ? Icons.south_west_rounded
+                      : Icons.north_east_rounded),
               size: 18,
               color: selected ? Colors.white : t.colorScheme.onSurfaceVariant,
             ),
@@ -350,9 +391,9 @@ class _QuickAddSheetState extends State<_QuickAddSheet> {
     );
     if (mounted) {
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(strings.tr('transaction_saved'))),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(strings.tr('transaction_saved'))));
     }
   }
 
@@ -397,8 +438,12 @@ class _QuickAddSheetState extends State<_QuickAddSheet> {
                 IconButton(
                   onPressed: () {
                     Navigator.of(context).pop();
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (_) => AddEditScreen(type: _type)));
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => AddEditScreen(type: _type),
+                      ),
+                    );
                   },
                   tooltip: strings.tr('new_transaction'),
                   icon: const Icon(Icons.more_horiz_rounded),
@@ -406,12 +451,20 @@ class _QuickAddSheetState extends State<_QuickAddSheet> {
               ],
             ),
             const SizedBox(height: 18),
-            AmountField(controller: _amountCtrl, focusNode: _amountFocus, hint: '0'),
+            AmountField(
+              controller: _amountCtrl,
+              focusNode: _amountFocus,
+              hint: '0',
+            ),
             const SizedBox(height: 18),
             Row(
               children: [
-                Text(strings.tr('category'),
-                    style: t.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                Text(
+                  strings.tr('category'),
+                  style: t.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
                 const Spacer(),
                 TextButton.icon(
                   onPressed: () async {
@@ -433,7 +486,10 @@ class _QuickAddSheetState extends State<_QuickAddSheet> {
             BigButton(
               label: strings.tr('save'),
               icon: Icons.check_rounded,
-              color: _type == TxType.expense ? AppColors.expense : AppColors.income,
+              color:
+                  _type == TxType.expense
+                      ? AppColors.expense
+                      : AppColors.income,
               onPressed: _saving ? null : _save,
             ),
           ],
@@ -453,7 +509,9 @@ class _QuickAddSheetState extends State<_QuickAddSheet> {
       onTap: () {
         setState(() {
           _type = type;
-          final ok = _categoryId != null && state.categoryById(_categoryId)?.type == type;
+          final ok =
+              _categoryId != null &&
+              state.categoryById(_categoryId)?.type == type;
           if (!ok) _categoryId = null;
         });
       },
@@ -468,7 +526,10 @@ class _QuickAddSheetState extends State<_QuickAddSheet> {
           strings.tr(isExp ? 'expense' : 'income'),
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: selected ? Colors.white : Theme.of(context).colorScheme.onSurfaceVariant,
+            color:
+                selected
+                    ? Colors.white
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
             fontWeight: FontWeight.w700,
           ),
         ),

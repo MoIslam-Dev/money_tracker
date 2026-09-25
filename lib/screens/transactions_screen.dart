@@ -20,12 +20,17 @@ class TransactionsScreen extends StatelessWidget {
     final t = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text(strings.tr('transactions'),
-            style: t.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+        title: Text(
+          strings.tr('transactions'),
+          style: t.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+        ),
         actions: [
           IconButton(
-            onPressed: () => Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const SearchScreen())),
+            onPressed:
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SearchScreen()),
+                ),
             tooltip: strings.tr('search'),
             icon: const Icon(Icons.search_rounded),
           ),
@@ -50,8 +55,13 @@ class _TxList extends StatelessWidget {
         title: strings.tr('empty_transactions'),
         subtitle: strings.tr('empty_transactions_sub'),
         buttonLabel: strings.tr('add_first'),
-        onPressed: () => Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const AddEditScreen(type: TxType.expense))),
+        onPressed:
+            () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const AddEditScreen(type: TxType.expense),
+              ),
+            ),
       );
     }
 
@@ -69,9 +79,12 @@ class _TxList extends StatelessWidget {
         final items = groups[date]!;
         final dayTotals = items.fold<({int exp, int inc})>(
           (exp: 0, inc: 0),
-          (acc, t) => t.isExpense
-              ? (exp: acc.exp + t.amount, inc: acc.inc)
-              : (exp: acc.exp, inc: acc.inc + t.amount),
+          (acc, t) =>
+              t.currency != state.currency
+                  ? acc
+                  : t.isExpense
+                  ? (exp: acc.exp + t.amount, inc: acc.inc)
+                  : (exp: acc.exp, inc: acc.inc + t.amount),
         );
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -85,8 +98,13 @@ class _TxList extends StatelessWidget {
     );
   }
 
-  Widget _dayHeader(BuildContext context, String date, ({int exp, int inc}) totals) {
-    final strings = context.watch<AppState>().strings;
+  Widget _dayHeader(
+    BuildContext context,
+    String date,
+    ({int exp, int inc}) totals,
+  ) {
+    final state = context.watch<AppState>();
+    final strings = state.strings;
     final t = Theme.of(context);
     final d = parseDateKey(date);
     final label = _dayLabel(context, d);
@@ -104,33 +122,51 @@ class _TxList extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('${d.day}',
-                    style: t.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w800, color: t.colorScheme.onPrimaryContainer)),
-                Text(monthShort(d.month, strings.lang),
-                    style: t.textTheme.labelSmall?.copyWith(
-                        color: t.colorScheme.onPrimaryContainer, fontSize: 9)),
+                Text(
+                  '${d.day}',
+                  style: t.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: t.colorScheme.onPrimaryContainer,
+                  ),
+                ),
+                Text(
+                  monthShort(d.month, strings.lang),
+                  style: t.textTheme.labelSmall?.copyWith(
+                    color: t.colorScheme.onPrimaryContainer,
+                    fontSize: 9,
+                  ),
+                ),
               ],
             ),
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(label.toUpperCase(),
-                style: t.textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w700, color: t.colorScheme.onSurface)),
+            child: Text(
+              label.toUpperCase(),
+              style: t.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: t.colorScheme.onSurface,
+              ),
+            ),
           ),
           if (totals.inc > 0)
-            Text('+${formatDA(totals.inc)} ',
-                style: TextStyle(
-                    color: AppColors.incomeOn(context),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700)),
+            Text(
+              '+${state.money(totals.inc)} ',
+              style: TextStyle(
+                color: AppColors.incomeOn(context),
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           if (totals.exp > 0)
-            Text('-${formatDA(totals.exp)}',
-                style: TextStyle(
-                    color: AppColors.expenseOn(context),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700)),
+            Text(
+              '-${state.money(totals.exp)}',
+              style: TextStyle(
+                color: AppColors.expenseOn(context),
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
         ],
       ),
     );
@@ -140,7 +176,11 @@ class _TxList extends StatelessWidget {
     final strings = context.watch<AppState>().strings;
     final now = DateTime.now();
     if (dateKey(d) == dateKey(now)) {
-      return strings.lang == 'ar' ? 'اليوم' : strings.lang == 'fr' ? "Aujourd'hui" : 'Today';
+      return strings.lang == 'ar'
+          ? 'اليوم'
+          : strings.lang == 'fr'
+          ? "Aujourd'hui"
+          : 'Today';
     }
     return '${weekdayName(d.weekday, strings.lang)} ${d.day} ${monthName(d.month, strings.lang)}';
   }
@@ -149,7 +189,10 @@ class _TxList extends StatelessWidget {
     final state = context.watch<AppState>();
     final strings = state.strings;
     final cat = state.categoryById(t.categoryId);
-    final color = t.isExpense ? AppColors.expenseOn(context) : AppColors.incomeOn(context);
+    final color =
+        t.isExpense
+            ? AppColors.expenseOn(context)
+            : AppColors.incomeOn(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
       child: SectionCard(
@@ -163,7 +206,11 @@ class _TxList extends StatelessWidget {
                 color: color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(iconFor(cat?.icon ?? 'more_horiz'), color: color, size: 20),
+              child: Icon(
+                iconFor(cat?.icon ?? 'more_horiz'),
+                color: color,
+                size: 20,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -171,37 +218,60 @@ class _TxList extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                      cat == null ? strings.tr('other') : strings.categoryName(cat.name),
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium
-                          ?.copyWith(fontWeight: FontWeight.w700)),
+                    cat == null
+                        ? strings.tr('other')
+                        : state.categoryLabel(cat),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                   if (t.note != null && t.note!.isNotEmpty)
-                    Text(t.note!,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                    Text(
+                      t.note!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                   if (t.paymentMethod.isNotEmpty && t.paymentMethod != 'cash')
-                    Text(strings.tr(t.paymentMethod),
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            fontSize: 10,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurfaceVariant
-                                .withValues(alpha: 0.8))),
+                    Text(
+                      strings.tr(t.paymentMethod),
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        fontSize: 10,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+                      ),
+                    ),
                 ],
               ),
             ),
-            Text('${t.isExpense ? '- ' : '+ '}${formatDA(t.amount)}',
-                style: TextStyle(color: color, fontWeight: FontWeight.w800, fontSize: 15)),
+            Text(
+              '${t.isExpense ? '- ' : '+ '}${state.moneyFor(t.amount, t.currency)}',
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.w800,
+                fontSize: 15,
+              ),
+            ),
             PopupMenuButton<String>(
               onSelected: (v) => _action(context, t, v),
-              itemBuilder: (_) => [
-                PopupMenuItem(value: 'edit', child: Text(strings.tr('edit'))),
-                PopupMenuItem(value: 'duplicate', child: Text(strings.tr('duplicate'))),
-                PopupMenuItem(value: 'delete', child: Text(strings.tr('delete'))),
-              ],
+              itemBuilder:
+                  (_) => [
+                    PopupMenuItem(
+                      value: 'edit',
+                      child: Text(strings.tr('edit')),
+                    ),
+                    PopupMenuItem(
+                      value: 'duplicate',
+                      child: Text(strings.tr('duplicate')),
+                    ),
+                    PopupMenuItem(
+                      value: 'delete',
+                      child: Text(strings.tr('delete')),
+                    ),
+                  ],
             ),
           ],
         ),
@@ -214,22 +284,32 @@ class _TxList extends StatelessWidget {
     final strings = state.strings;
     switch (v) {
       case 'edit':
-        Navigator.push(context,
-            MaterialPageRoute(builder: (_) => AddEditScreen(type: t.type, editing: t)));
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => AddEditScreen(type: t.type, editing: t),
+          ),
+        );
       case 'duplicate':
         await state.duplicateTransaction(t);
       case 'delete':
         final ok = await showDialog<bool>(
           context: context,
-          builder: (ctx) => AlertDialog(
-            title: Text(strings.tr('confirm')),
-            content: Text(strings.tr('confirm_delete')),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(strings.tr('cancel'))),
-              FilledButton(
-                  onPressed: () => Navigator.pop(ctx, true), child: Text(strings.tr('delete'))),
-            ],
-          ),
+          builder:
+              (ctx) => AlertDialog(
+                title: Text(strings.tr('confirm')),
+                content: Text(strings.tr('confirm_delete')),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, false),
+                    child: Text(strings.tr('cancel')),
+                  ),
+                  FilledButton(
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child: Text(strings.tr('delete')),
+                  ),
+                ],
+              ),
         );
         if (ok == true) await state.deleteTransaction(t);
     }
@@ -263,22 +343,28 @@ class _SearchScreenState extends State<SearchScreen> {
     final state = context.read<AppState>();
     final q = _queryCtrl.text.trim().toLowerCase();
     final qAmount = parseAmount(_queryCtrl.text);
-    final list = state.transactions.where((t) {
-      if (_type != null && t.type != _type) return false;
-      if (_categoryId != null && t.categoryId != _categoryId) return false;
-      if (_payment != null && t.paymentMethod != _payment) return false;
-      if (_from != null && t.date.compareTo(dateKey(_from!)) < 0) return false;
-      if (_to != null && t.date.compareTo(dateKey(_to!)) > 0) return false;
-      if (q.isNotEmpty) {
-        final cat = state.categoryById(t.categoryId);
-        final catName = cat == null ? '' : state.strings.categoryName(cat.name).toLowerCase();
-        final inCat = catName.contains(q);
-        final inNote = (t.note ?? '').toLowerCase().contains(q);
-        final inAmount = qAmount != null && t.amount == qAmount;
-        if (!inCat && !inNote && !inAmount) return false;
-      }
-      return true;
-    }).toList();
+    final list =
+        state.transactions.where((t) {
+          if (_type != null && t.type != _type) return false;
+          if (_categoryId != null && t.categoryId != _categoryId) return false;
+          if (_payment != null && t.paymentMethod != _payment) return false;
+          if (_from != null && t.date.compareTo(dateKey(_from!)) < 0) {
+            return false;
+          }
+          if (_to != null && t.date.compareTo(dateKey(_to!)) > 0) {
+            return false;
+          }
+          if (q.isNotEmpty) {
+            final cat = state.categoryById(t.categoryId);
+            final catName =
+                cat == null ? '' : state.categoryLabel(cat).toLowerCase();
+            final inCat = catName.contains(q);
+            final inNote = (t.note ?? '').toLowerCase().contains(q);
+            final inAmount = qAmount != null && t.amount == qAmount;
+            if (!inCat && !inNote && !inAmount) return false;
+          }
+          return true;
+        }).toList();
 
     switch (_sort) {
       case 'oldest':
@@ -297,7 +383,10 @@ class _SearchScreenState extends State<SearchScreen> {
     final state = context.read<AppState>();
     final picked = await showDatePicker(
       context: context,
-      initialDate: from ? (_from ?? DateTime(DateTime.now().year - 1)) : (_to ?? DateTime.now()),
+      initialDate:
+          from
+              ? (_from ?? DateTime(DateTime.now().year - 1))
+              : (_to ?? DateTime.now()),
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
       locale: Locale(state.strings.lang),
@@ -321,19 +410,27 @@ class _SearchScreenState extends State<SearchScreen> {
           IconButton(
             tooltip: strings.tr('export_excel'),
             icon: const Icon(Icons.table_view_rounded),
-            onPressed: results.isEmpty
-                ? null
-                : () async {
-                    final messenger = ScaffoldMessenger.of(context);
-                    try {
-                      final path =
-                          await exportExcel(state, transactions: results);
-                      messenger.showSnackBar(SnackBar(
-                          content: Text('${strings.tr('exported_to')} $path')));
-                    } catch (e) {
-                      messenger.showSnackBar(SnackBar(content: Text('Error: $e')));
-                    }
-                  },
+            onPressed:
+                results.isEmpty
+                    ? null
+                    : () async {
+                      final messenger = ScaffoldMessenger.of(context);
+                      try {
+                        final path = await exportExcel(
+                          state,
+                          transactions: results,
+                        );
+                        messenger.showSnackBar(
+                          SnackBar(
+                            content: Text('${strings.tr('exported_to')} $path'),
+                          ),
+                        );
+                      } catch (e) {
+                        messenger.showSnackBar(
+                          SnackBar(content: Text('Error: $e')),
+                        );
+                      }
+                    },
           ),
         ],
       ),
@@ -349,15 +446,16 @@ class _SearchScreenState extends State<SearchScreen> {
                 decoration: InputDecoration(
                   hintText: strings.tr('search_hint'),
                   prefixIcon: const Icon(Icons.search_rounded),
-                  suffixIcon: _queryCtrl.text.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear_rounded),
-                          onPressed: () {
-                            _queryCtrl.clear();
-                            setState(() {});
-                          },
-                        )
-                      : null,
+                  suffixIcon:
+                      _queryCtrl.text.isNotEmpty
+                          ? IconButton(
+                            icon: const Icon(Icons.clear_rounded),
+                            onPressed: () {
+                              _queryCtrl.clear();
+                              setState(() {});
+                            },
+                          )
+                          : null,
                 ),
                 onChanged: (_) => setState(() {}),
               ),
@@ -376,12 +474,24 @@ class _SearchScreenState extends State<SearchScreen> {
                   FilterChip(
                     label: Text(strings.tr('income')),
                     selected: _type == TxType.income,
-                    onSelected: (_) => setState(() => _type = _type == TxType.income ? null : TxType.income),
+                    onSelected:
+                        (_) => setState(
+                          () =>
+                              _type =
+                                  _type == TxType.income ? null : TxType.income,
+                        ),
                   ),
                   FilterChip(
                     label: Text(strings.tr('expense')),
                     selected: _type == TxType.expense,
-                    onSelected: (_) => setState(() => _type = _type == TxType.expense ? null : TxType.expense),
+                    onSelected:
+                        (_) => setState(
+                          () =>
+                              _type =
+                                  _type == TxType.expense
+                                      ? null
+                                      : TxType.expense,
+                        ),
                   ),
                 ],
               ),
@@ -397,9 +507,15 @@ class _SearchScreenState extends State<SearchScreen> {
                       value: _categoryId,
                       hint: strings.tr('category'),
                       items: [
-                        DropdownMenuItem(value: null, child: Text(strings.tr('all'))),
+                        DropdownMenuItem(
+                          value: null,
+                          child: Text(strings.tr('all')),
+                        ),
                         for (final c in state.categories)
-                          DropdownMenuItem(value: c.id, child: Text(strings.categoryName(c.name))),
+                          DropdownMenuItem(
+                            value: c.id,
+                            child: Text(state.categoryLabel(c)),
+                          ),
                       ],
                       onChanged: (v) => setState(() => _categoryId = v),
                     ),
@@ -413,7 +529,10 @@ class _SearchScreenState extends State<SearchScreen> {
                       items: [
                         const DropdownMenuItem(value: null, child: Text('All')),
                         for (final m in PaymentMethods.all)
-                          DropdownMenuItem(value: m, child: Text(strings.tr(m))),
+                          DropdownMenuItem(
+                            value: m,
+                            child: Text(strings.tr(m)),
+                          ),
                       ],
                       onChanged: (v) => setState(() => _payment = v),
                     ),
@@ -430,7 +549,11 @@ class _SearchScreenState extends State<SearchScreen> {
                     child: OutlinedButton.icon(
                       onPressed: () => _pickDate(from: true),
                       icon: const Icon(Icons.start_rounded, size: 16),
-                      label: Text(_from == null ? '${strings.tr('from')} ?' : dateKey(_from!)),
+                      label: Text(
+                        _from == null
+                            ? '${strings.tr('from')} ?'
+                            : dateKey(_from!),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -438,26 +561,48 @@ class _SearchScreenState extends State<SearchScreen> {
                     child: OutlinedButton.icon(
                       onPressed: () => _pickDate(from: false),
                       icon: const Icon(Icons.stop_rounded, size: 16),
-                      label: Text(_to == null ? '${strings.tr('to')} ?' : dateKey(_to!)),
+                      label: Text(
+                        _to == null ? '${strings.tr('to')} ?' : dateKey(_to!),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   PopupMenuButton<String>(
                     tooltip: strings.tr('sort'),
                     onSelected: (v) => setState(() => _sort = v),
-                    itemBuilder: (_) => [
-                      PopupMenuItem(value: 'newest', child: Text(strings.tr('sort_newest'))),
-                      PopupMenuItem(value: 'oldest', child: Text(strings.tr('sort_oldest'))),
-                      PopupMenuItem(value: 'high', child: Text(strings.tr('sort_high'))),
-                      PopupMenuItem(value: 'low', child: Text(strings.tr('sort_low'))),
-                    ],
+                    itemBuilder:
+                        (_) => [
+                          PopupMenuItem(
+                            value: 'newest',
+                            child: Text(strings.tr('sort_newest')),
+                          ),
+                          PopupMenuItem(
+                            value: 'oldest',
+                            child: Text(strings.tr('sort_oldest')),
+                          ),
+                          PopupMenuItem(
+                            value: 'high',
+                            child: Text(strings.tr('sort_high')),
+                          ),
+                          PopupMenuItem(
+                            value: 'low',
+                            child: Text(strings.tr('sort_low')),
+                          ),
+                        ],
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       child: Row(
                         children: [
-                          Icon(Icons.sort_rounded, size: 20, color: Theme.of(context).colorScheme.primary),
+                          Icon(
+                            Icons.sort_rounded,
+                            size: 20,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
                           const SizedBox(width: 4),
-                          Icon(Icons.arrow_drop_down_rounded, color: Theme.of(context).colorScheme.primary),
+                          Icon(
+                            Icons.arrow_drop_down_rounded,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
                         ],
                       ),
                     ),
@@ -472,68 +617,102 @@ class _SearchScreenState extends State<SearchScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: Text('${results.length} ${strings.tr('transactions_count').replaceAll('{n}', '')}',
-                    style: t.textTheme.labelSmall?.copyWith(color: t.colorScheme.onSurfaceVariant)),
+                child: Text(
+                  '${results.length} ${strings.tr('transactions_count').replaceAll('{n}', '')}',
+                  style: t.textTheme.labelSmall?.copyWith(
+                    color: t.colorScheme.onSurfaceVariant,
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 6),
             Expanded(
-              child: results.isEmpty
-                  ? EmptyState(
-                      icon: Icons.search_off_rounded,
-                      title: strings.tr('search'),
-                      subtitle: strings.tr('filters'),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
-                      itemCount: results.length,
-                      itemBuilder: (context, i) {
-                        final tx = results[i];
-                        final cat = state.categoryById(tx.categoryId);
-                        final color = tx.isExpense ? AppColors.expenseOn(context) : AppColors.incomeOn(context);
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: SectionCard(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 38,
-                                  height: 38,
-                                  decoration: BoxDecoration(
-                                    color: color.withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(11),
+              child:
+                  results.isEmpty
+                      ? EmptyState(
+                        icon: Icons.search_off_rounded,
+                        title: strings.tr('search'),
+                        subtitle: strings.tr('filters'),
+                      )
+                      : ListView.builder(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
+                        itemCount: results.length,
+                        itemBuilder: (context, i) {
+                          final tx = results[i];
+                          final cat = state.categoryById(tx.categoryId);
+                          final color =
+                              tx.isExpense
+                                  ? AppColors.expenseOn(context)
+                                  : AppColors.incomeOn(context);
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: SectionCard(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 10,
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 38,
+                                    height: 38,
+                                    decoration: BoxDecoration(
+                                      color: color.withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(11),
+                                    ),
+                                    child: Icon(
+                                      iconFor(cat?.icon ?? 'more_horiz'),
+                                      color: color,
+                                      size: 18,
+                                    ),
                                   ),
-                                  child: Icon(iconFor(cat?.icon ?? 'more_horiz'), color: color, size: 18),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                          cat == null ? strings.tr('other') : strings.categoryName(cat.name),
-                                          style: t.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
-                                      Text(
-                                        [tx.date, if (tx.note?.isNotEmpty ?? false) tx.note]
-                                            .whereType<String>()
-                                            .join(' · '),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: t.textTheme.labelSmall
-                                            ?.copyWith(color: t.colorScheme.onSurfaceVariant),
-                                      ),
-                                    ],
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          cat == null
+                                              ? strings.tr('other')
+                                              : state.categoryLabel(cat),
+                                          style: t.textTheme.bodyMedium
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                        ),
+                                        Text(
+                                          [
+                                            tx.date,
+                                            if (tx.note?.isNotEmpty ?? false)
+                                              tx.note,
+                                          ].whereType<String>().join(' · '),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: t.textTheme.labelSmall
+                                              ?.copyWith(
+                                                color:
+                                                    t
+                                                        .colorScheme
+                                                        .onSurfaceVariant,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                Text('${tx.isExpense ? '- ' : '+ '}${formatDA(tx.amount)}',
-                                    style: TextStyle(color: color, fontWeight: FontWeight.w800)),
-                              ],
+                                  Text(
+                                    '${tx.isExpense ? '- ' : '+ '}${state.moneyFor(tx.amount, tx.currency)}',
+                                    style: TextStyle(
+                                      color: color,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
+                          );
+                        },
+                      ),
             ),
           ],
         ),
@@ -541,8 +720,13 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Widget _dropdown<T>(BuildContext context,
-      {required T value, required String hint, required List<DropdownMenuItem<T>> items, required ValueChanged<T> onChanged}) {
+  Widget _dropdown<T>(
+    BuildContext context, {
+    required T value,
+    required String hint,
+    required List<DropdownMenuItem<T>> items,
+    required ValueChanged<T> onChanged,
+  }) {
     return DropdownButtonFormField<T>(
       value: value,
       decoration: InputDecoration(

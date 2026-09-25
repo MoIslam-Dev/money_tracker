@@ -1,6 +1,8 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../state/app_state.dart';
 import '../theme/theme.dart';
 import '../utils/money.dart';
 
@@ -10,19 +12,27 @@ class MoneyText extends StatelessWidget {
   final bool expenseColor;
   final TextStyle? style;
   final bool showSign;
-  const MoneyText(this.amount,
-      {super.key, this.expenseColor = false, this.style, this.showSign = false});
+  final String? currency;
+  const MoneyText(
+    this.amount, {
+    super.key,
+    this.expenseColor = false,
+    this.style,
+    this.showSign = false,
+    this.currency,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final state = context.watch<AppState>();
     final effective = style ?? Theme.of(context).textTheme.titleMedium;
-    final color = expenseColor
-        ? AppColors.expenseOn(context)
-        : style?.color ??
-            Theme.of(context).colorScheme.onSurface;
+    final color =
+        expenseColor
+            ? AppColors.expenseOn(context)
+            : style?.color ?? Theme.of(context).colorScheme.onSurface;
     final prefix = showSign ? (amount >= 0 ? '+' : '') : '';
     return Text(
-      '$prefix${formatDA(amount)}',
+      '$prefix${state.moneyFor(amount, currency)}',
       style: effective?.copyWith(color: color, fontWeight: FontWeight.w700),
     );
   }
@@ -31,10 +41,15 @@ class MoneyText extends StatelessWidget {
 class SectionCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
-  const SectionCard({super.key, required this.child, this.padding = const EdgeInsets.all(16)});
+  const SectionCard({
+    super.key,
+    required this.child,
+    this.padding = const EdgeInsets.all(16),
+  });
 
   @override
-  Widget build(BuildContext context) => Card(child: Padding(padding: padding, child: child));
+  Widget build(BuildContext context) =>
+      Card(child: Padding(padding: padding, child: child));
 }
 
 class SectionHeader extends StatelessWidget {
@@ -58,9 +73,13 @@ class SectionHeader extends StatelessWidget {
         ),
         const SizedBox(width: 9),
         Expanded(
-          child: Text(title,
-              style: t.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w700, letterSpacing: 0.3)),
+          child: Text(
+            title,
+            style: t.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.3,
+            ),
+          ),
         ),
         if (actionText != null && onAction != null)
           TextButton(onPressed: onAction, child: Text(actionText!)),
@@ -103,13 +122,21 @@ class EmptyState extends StatelessWidget {
               child: Icon(icon, size: 42, color: t.colorScheme.primary),
             ),
             const SizedBox(height: 20),
-            Text(title,
-                textAlign: TextAlign.center,
-                style: t.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: t.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
             const SizedBox(height: 8),
-            Text(subtitle,
-                textAlign: TextAlign.center,
-                style: t.textTheme.bodyMedium?.copyWith(color: t.colorScheme.onSurfaceVariant)),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: t.textTheme.bodyMedium?.copyWith(
+                color: t.colorScheme.onSurfaceVariant,
+              ),
+            ),
             if (buttonLabel != null) ...[
               const SizedBox(height: 20),
               FilledButton.icon(
@@ -131,17 +158,20 @@ class AmountField extends StatelessWidget {
   final FocusNode focusNode;
   final String hint;
   final ValueChanged<String>? onChanged;
+  final String? currency;
   const AmountField({
     super.key,
     required this.controller,
     required this.focusNode,
     required this.hint,
     this.onChanged,
+    this.currency,
   });
 
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context);
+    final state = context.watch<AppState>();
     return ValueListenableBuilder<TextEditingValue>(
       valueListenable: controller,
       builder: (context, value, _) {
@@ -155,7 +185,9 @@ class AmountField extends StatelessWidget {
               keyboardType: TextInputType.number,
               inputFormatters: const [],
               textAlign: TextAlign.center,
-              style: t.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w800),
+              style: t.textTheme.displaySmall?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
               decoration: InputDecoration(
                 hintText: hint,
                 hintStyle: t.textTheme.displaySmall?.copyWith(
@@ -163,8 +195,13 @@ class AmountField extends StatelessWidget {
                   color: t.colorScheme.outline.withValues(alpha: 0.5),
                 ),
                 filled: true,
-                fillColor: t.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
+                fillColor: t.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.5,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  borderSide: BorderSide.none,
+                ),
               ),
               onChanged: (raw) {
                 final cleaned = sanitizeAmountText(raw);
@@ -180,12 +217,14 @@ class AmountField extends StatelessWidget {
             const SizedBox(height: 10),
             Center(
               child: Text(
-                parsed == null ? '0 DA' : formatDA(parsed),
+                state.moneyFor(parsed ?? 0, currency),
                 style: t.textTheme.labelLarge?.copyWith(
-                    color: parsed == null
-                        ? t.colorScheme.outline
-                        : t.colorScheme.primary,
-                    fontWeight: FontWeight.w600),
+                  color:
+                      parsed == null
+                          ? t.colorScheme.outline
+                          : t.colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],
@@ -214,9 +253,13 @@ class MonthSelector extends StatelessWidget {
       children: [
         IconButton(onPressed: onPrev, icon: const Icon(Icons.chevron_left)),
         Expanded(
-          child: Text(label,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+          ),
         ),
         IconButton(onPressed: onNext, icon: const Icon(Icons.chevron_right)),
       ],
@@ -233,12 +276,13 @@ class LevelBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = Theme.of(context);
     final pct = value.clamp(0.0, 1.0);
-    final c = color ??
+    final c =
+        color ??
         (value >= 1
             ? AppColors.expenseOn(context)
             : value >= 0.8
-                ? AppColors.amberOn(context)
-                : t.colorScheme.primary);
+            ? AppColors.amberOn(context)
+            : t.colorScheme.primary);
     return ClipRRect(
       borderRadius: BorderRadius.circular(6),
       child: LinearProgressIndicator(
@@ -256,7 +300,11 @@ class CatDot extends StatelessWidget {
   final Color color;
   const CatDot(this.color, {super.key});
   @override
-  Widget build(BuildContext context) => Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle));
+  Widget build(BuildContext context) => Container(
+    width: 10,
+    height: 10,
+    decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+  );
 }
 
 class DonutChart extends StatelessWidget {
@@ -270,8 +318,12 @@ class DonutChart extends StatelessWidget {
       return SizedBox(
         height: 180,
         child: Center(
-          child: Text('—',
-              style: t.textTheme.bodyMedium?.copyWith(color: t.colorScheme.outline)),
+          child: Text(
+            '—',
+            style: t.textTheme.bodyMedium?.copyWith(
+              color: t.colorScheme.outline,
+            ),
+          ),
         ),
       );
     }
@@ -280,20 +332,27 @@ class DonutChart extends StatelessWidget {
       height: 220,
       child: PieChart(
         PieChartData(
-          sections: slices.map((s) {
-            final fraction = total == 0 ? 0.0 : s.$2 / total;
-            return PieChartSectionData(
-              value: fraction,
-              color: s.$3,
-              radius: Math.min(44.0, 50.0),
-              title: fraction > 0.03 ? '${(fraction * 100).toStringAsFixed(0)}%' : '',
-              titleStyle: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: s.$3.computeLuminance() > 0.5 ? Colors.black87 : Colors.white,
-              ),
-            );
-          }).toList(),
+          sections:
+              slices.map((s) {
+                final fraction = total == 0 ? 0.0 : s.$2 / total;
+                return PieChartSectionData(
+                  value: fraction,
+                  color: s.$3,
+                  radius: Math.min(44.0, 50.0),
+                  title:
+                      fraction > 0.03
+                          ? '${(fraction * 100).toStringAsFixed(0)}%'
+                          : '',
+                  titleStyle: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color:
+                        s.$3.computeLuminance() > 0.5
+                            ? Colors.black87
+                            : Colors.white,
+                  ),
+                );
+              }).toList(),
           centerSpaceRadius: 52,
           sectionsSpace: 3,
           startDegreeOffset: -90,
@@ -309,28 +368,52 @@ class TrendBars extends StatelessWidget {
   final List<(String, int, int)> series; // dateKey, income, expense
   final Color incomeColor;
   final Color expenseColor;
-  const TrendBars({super.key, required this.series, required this.incomeColor, required this.expenseColor});
+  const TrendBars({
+    super.key,
+    required this.series,
+    required this.incomeColor,
+    required this.expenseColor,
+  });
 
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context);
+    final state = context.watch<AppState>();
     if (series.isEmpty) return const SizedBox.shrink();
-    final maxV = series.fold<int>(1, (m, e) => m > (e.$2 > e.$3 ? e.$2 : e.$3) ? m : (e.$2 > e.$3 ? e.$2 : e.$3));
+    final maxV = series.fold<int>(
+      1,
+      (m, e) =>
+          m > (e.$2 > e.$3 ? e.$2 : e.$3) ? m : (e.$2 > e.$3 ? e.$2 : e.$3),
+    );
     final groups = <BarChartGroupData>[];
     for (var i = 0; i < series.length; i++) {
       final (_, inc, exp) = series[i];
-      groups.add(BarChartGroupData(
-        x: i,
-        barsSpace: 2,
-        barRods: [
-          if (exp > 0)
-            BarChartRodData(toY: exp.toDouble(),
-                color: expenseColor, width: 7, borderRadius: const BorderRadius.vertical(top: Radius.circular(3))),
-          if (inc > 0)
-            BarChartRodData(toY: inc.toDouble(),
-                color: incomeColor, width: 7, borderRadius: const BorderRadius.vertical(top: Radius.circular(3))),
-        ],
-      ));
+      groups.add(
+        BarChartGroupData(
+          x: i,
+          barsSpace: 2,
+          barRods: [
+            if (exp > 0)
+              BarChartRodData(
+                toY: exp.toDouble(),
+                color: expenseColor,
+                width: 7,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(3),
+                ),
+              ),
+            if (inc > 0)
+              BarChartRodData(
+                toY: inc.toDouble(),
+                color: incomeColor,
+                width: 7,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(3),
+                ),
+              ),
+          ],
+        ),
+      );
     }
     final showStep = (series.length / 7).ceil();
     return BarChart(
@@ -341,23 +424,35 @@ class TrendBars extends StatelessWidget {
           show: true,
           drawVerticalLine: false,
           horizontalInterval: ((maxV / 4).clamp(1, maxV)).toDouble(),
-          getDrawingHorizontalLine: (_) => FlLine(
-            color: t.colorScheme.outlineVariant.withValues(alpha: 0.3),
-            strokeWidth: 1,
-          ),
+          getDrawingHorizontalLine:
+              (_) => FlLine(
+                color: t.colorScheme.outlineVariant.withValues(alpha: 0.3),
+                strokeWidth: 1,
+              ),
         ),
         borderData: FlBorderData(show: false),
         titlesData: FlTitlesData(
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 44,
-              getTitlesWidget: (v, meta) => Text(
-                formatDAShort(v.toInt()),
-                style: t.textTheme.labelSmall?.copyWith(color: t.colorScheme.outline),
-              ),
+              getTitlesWidget:
+                  (v, meta) => Text(
+                    formatMoneyShort(
+                      v.toInt(),
+                      state.strings.lang,
+                      state.currency,
+                    ),
+                    style: t.textTheme.labelSmall?.copyWith(
+                      color: t.colorScheme.outline,
+                    ),
+                  ),
             ),
           ),
           bottomTitles: AxisTitles(
@@ -366,12 +461,16 @@ class TrendBars extends StatelessWidget {
               interval: 1,
               getTitlesWidget: (v, meta) {
                 final idx = v.toInt();
-                if (idx < 0 || idx >= series.length || idx % showStep != 0) return const SizedBox.shrink();
+                if (idx < 0 || idx >= series.length || idx % showStep != 0) {
+                  return const SizedBox.shrink();
+                }
                 return Padding(
                   padding: const EdgeInsets.only(top: 6),
                   child: Text(
                     _shortLabel(series[idx].$1),
-                    style: t.textTheme.labelSmall?.copyWith(color: t.colorScheme.outline),
+                    style: t.textTheme.labelSmall?.copyWith(
+                      color: t.colorScheme.outline,
+                    ),
                   ),
                 );
               },
@@ -403,12 +502,15 @@ class TrendLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context);
+    final state = context.watch<AppState>();
     final all = [...income, ...expense];
     if (all.isEmpty) return const SizedBox.shrink();
     final maxV = all.fold<int>(1, (m, e) => e.$2 > m ? e.$2 : m);
 
-    List<FlSpot> spots(List<(String, int)> list) =>
-        [for (var i = 0; i < list.length; i++) FlSpot(i.toDouble(), list[i].$2.toDouble())];
+    List<FlSpot> spots(List<(String, int)> list) => [
+      for (var i = 0; i < list.length; i++)
+        FlSpot(i.toDouble(), list[i].$2.toDouble()),
+    ];
 
     return LineChart(
       LineChartData(
@@ -417,23 +519,35 @@ class TrendLine extends StatelessWidget {
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
-          getDrawingHorizontalLine: (_) => FlLine(
-            color: t.colorScheme.outlineVariant.withValues(alpha: 0.3),
-            strokeWidth: 1,
-          ),
+          getDrawingHorizontalLine:
+              (_) => FlLine(
+                color: t.colorScheme.outlineVariant.withValues(alpha: 0.3),
+                strokeWidth: 1,
+              ),
         ),
         borderData: FlBorderData(show: false),
         titlesData: FlTitlesData(
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 44,
-              getTitlesWidget: (v, meta) => Text(
-                formatDAShort(v.toInt()),
-                style: t.textTheme.labelSmall?.copyWith(color: t.colorScheme.outline),
-              ),
+              getTitlesWidget:
+                  (v, meta) => Text(
+                    formatMoneyShort(
+                      v.toInt(),
+                      state.strings.lang,
+                      state.currency,
+                    ),
+                    style: t.textTheme.labelSmall?.copyWith(
+                      color: t.colorScheme.outline,
+                    ),
+                  ),
             ),
           ),
           bottomTitles: AxisTitles(
@@ -442,13 +556,17 @@ class TrendLine extends StatelessWidget {
               reservedSize: 28,
               getTitlesWidget: (v, meta) {
                 final idx = v.toInt();
-                if (idx < 0 || idx >= income.length) return const SizedBox.shrink();
+                if (idx < 0 || idx >= income.length) {
+                  return const SizedBox.shrink();
+                }
                 final parts = income[idx].$1.split('-');
                 return Padding(
                   padding: const EdgeInsets.only(top: 6),
                   child: Text(
                     monthShort(int.parse(parts[1]), 'en'),
-                    style: t.textTheme.labelSmall?.copyWith(color: t.colorScheme.outline),
+                    style: t.textTheme.labelSmall?.copyWith(
+                      color: t.colorScheme.outline,
+                    ),
                   ),
                 );
               },
@@ -489,6 +607,7 @@ class BalanceTrend extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context);
+    final state = context.watch<AppState>();
     if (series.isEmpty) return const SizedBox.shrink();
     final lo = series.fold<int>(0, (m, e) => e.$2 < m ? e.$2 : m);
     final hi = series.fold<int>(0, (m, e) => e.$2 > m ? e.$2 : m);
@@ -502,23 +621,35 @@ class BalanceTrend extends StatelessWidget {
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
-          getDrawingHorizontalLine: (_) => FlLine(
-            color: t.colorScheme.outlineVariant.withValues(alpha: 0.3),
-            strokeWidth: 1,
-          ),
+          getDrawingHorizontalLine:
+              (_) => FlLine(
+                color: t.colorScheme.outlineVariant.withValues(alpha: 0.3),
+                strokeWidth: 1,
+              ),
         ),
         borderData: FlBorderData(show: false),
         titlesData: FlTitlesData(
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 44,
-              getTitlesWidget: (v, meta) => Text(
-                formatDAShort(v.toInt()),
-                style: t.textTheme.labelSmall?.copyWith(color: t.colorScheme.outline),
-              ),
+              getTitlesWidget:
+                  (v, meta) => Text(
+                    formatMoneyShort(
+                      v.toInt(),
+                      state.strings.lang,
+                      state.currency,
+                    ),
+                    style: t.textTheme.labelSmall?.copyWith(
+                      color: t.colorScheme.outline,
+                    ),
+                  ),
             ),
           ),
           bottomTitles: AxisTitles(
@@ -527,13 +658,17 @@ class BalanceTrend extends StatelessWidget {
               reservedSize: 28,
               getTitlesWidget: (v, meta) {
                 final idx = v.toInt();
-                if (idx < 0 || idx >= series.length) return const SizedBox.shrink();
+                if (idx < 0 || idx >= series.length) {
+                  return const SizedBox.shrink();
+                }
                 final parts = series[idx].$1.split('-');
                 return Padding(
                   padding: const EdgeInsets.only(top: 6),
                   child: Text(
                     monthShort(int.parse(parts[1]), lang),
-                    style: t.textTheme.labelSmall?.copyWith(color: t.colorScheme.outline),
+                    style: t.textTheme.labelSmall?.copyWith(
+                      color: t.colorScheme.outline,
+                    ),
                   ),
                 );
               },
@@ -544,7 +679,7 @@ class BalanceTrend extends StatelessWidget {
           LineChartBarData(
             spots: [
               for (var i = 0; i < series.length; i++)
-                FlSpot(i.toDouble(), series[i].$2.toDouble())
+                FlSpot(i.toDouble(), series[i].$2.toDouble()),
             ],
             isCurved: true,
             curveSmoothness: 0.35,
@@ -577,15 +712,22 @@ class BigButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final IconData? icon;
   final Color? color;
-  const BigButton({super.key, required this.label, this.onPressed, this.icon, this.color});
+  const BigButton({
+    super.key,
+    required this.label,
+    this.onPressed,
+    this.icon,
+    this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final bg = color ?? scheme.primary;
-    final fg = color == null
-        ? scheme.onPrimary
-        : (bg.computeLuminance() > 0.5 ? Colors.black87 : Colors.white);
+    final fg =
+        color == null
+            ? scheme.onPrimary
+            : (bg.computeLuminance() > 0.5 ? Colors.black87 : Colors.white);
     return FilledButton(
       style: FilledButton.styleFrom(
         backgroundColor: bg,
@@ -596,7 +738,13 @@ class BigButton extends StatelessWidget {
         textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
       ),
       onPressed: onPressed,
-      child: icon == null ? Text(label) : Row(mainAxisSize: MainAxisSize.min, children: [Icon(icon), const SizedBox(width: 8), Text(label)]),
+      child:
+          icon == null
+              ? Text(label)
+              : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [Icon(icon), const SizedBox(width: 8), Text(label)],
+              ),
     );
   }
 }

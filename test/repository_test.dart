@@ -149,7 +149,7 @@ void main() {
       expect((await repo2.categoryById(id))!.name, 'gym');
       expect((await repo2.categories()).length, greaterThan(20));
       final db = await db2.database;
-      expect(await db.getVersion(), 3);
+      expect(await db.getVersion(), 4);
       await db2.close();
     } finally {
       await dir.delete(recursive: true);

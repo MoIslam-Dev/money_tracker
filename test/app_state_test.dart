@@ -166,10 +166,11 @@ void main() {
         date: DateTime(state.currentMonth.year, state.currentMonth.month, 5));
     await state.renameCategory(state.categoryById(food)!, ' Eating  Out ');
     final renamed = state.categoryById(food)!;
-    expect(renamed.name, 'eating_out');
+    expect(renamed.name, 'food');
     expect(renamed.id, food);
+    expect(renamed.nameEn, 'Eating Out');
     expect(state.transactions.single.categoryId, food);
-    expect(state.strings.categoryName(renamed.name), 'Eating Out');
+    expect(state.categoryLabel(renamed), 'Eating Out');
   });
 
   test('removeCategory deletes the category', () async {

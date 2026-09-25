@@ -9,9 +9,10 @@ class AppStrings {
   bool get isRtl => lang == 'ar';
 
   String tr(String key) {
-    final Map<String, String>? map = lang == 'fr'
-        ? _fr
-        : lang == 'ar'
+    final Map<String, String>? map =
+        lang == 'fr'
+            ? _fr
+            : lang == 'ar'
             ? _ar
             : null;
     return map?[key] ?? _en[key] ?? key;
@@ -128,6 +129,22 @@ class AppStrings {
     'insights': 'Insights',
     'settings': 'Settings',
     'currency': 'Currency',
+    'currency_code': 'Currency code',
+    'currency_symbol': 'Symbol',
+    'currency_name': 'Currency name',
+    'symbol_before_amount': 'Symbol before amount',
+    'add_custom_currency': 'Add custom currency',
+    'currency_history': 'Existing transactions',
+    'currency_keep': 'Keep existing amounts',
+    'currency_keep_desc':
+        'Historical transactions keep their original currency. New ones use the new currency.',
+    'currency_convert': 'Convert existing amounts',
+    'currency_convert_desc':
+        'Convert historical transactions to the new currency at your rate.',
+    'conversion_rate': 'Conversion rate',
+    'currency_convert_error': 'Enter a rate greater than 0.',
+    'currency_saved': 'Currency saved',
+    'currency_added': 'Currency added',
     'language': 'Language',
     'theme': 'Theme',
     'light': 'Light',
@@ -150,13 +167,15 @@ class AppStrings {
     'backup_create': 'Create backup',
     'restore': 'Restore',
     'delete_all': 'Delete all data',
-    'delete_all_confirm': 'This permanently deletes all your data. Are you sure?',
+    'delete_all_confirm':
+        'This permanently deletes all your data. Are you sure?',
     'type_confirm': 'Type DELETE to confirm',
     'about': 'About',
     'version': 'Version',
     'made_by': 'Made by Djouablia Mohamed Islam',
     'empty_transactions': 'Your financial journey starts here.',
-    'empty_transactions_sub': 'Track your first income or expense in a few seconds.',
+    'empty_transactions_sub':
+        'Track your first income or expense in a few seconds.',
     'add_first': 'Add your first transaction',
     'demo_data': 'Demo data',
     'demo_data_banner': 'You are viewing sample data.',
@@ -187,11 +206,16 @@ class AppStrings {
     'higher': 'higher',
     'lower': 'lower',
     'committed_note': 'Your recurring expenses total {a} per month.',
-    'expense_vs_last': 'Your expenses this month are {a} {dir} than last month.',
+    'expense_vs_last':
+        'Your expenses this month are {a} {dir} than last month.',
     'no_prev_month': 'No data for the previous month',
     'avg_daily': 'Average daily expense',
     'add_category': 'New category',
     'category_name': 'Category name',
+    'category_name_en': 'Name (English)',
+    'category_name_fr': 'Name (French)',
+    'category_name_ar': 'Name (Arabic)',
+    'category_names_required': 'Enter all three names.',
     'choose_icon': 'Choose icon',
     'custom': 'Custom',
     'summary': 'Summary',
@@ -214,19 +238,22 @@ class AppStrings {
     'categories': 'Categories',
     'expense_categories': 'Expense categories',
     'income_categories': 'Income categories',
-    'default_category_note': 'Built-in categories can be renamed but not deleted — your history stays safe.',
+    'default_category_note':
+        'Built-in categories can be renamed but not deleted — your history stays safe.',
     'recent': 'Recent',
     'today_net': 'Net today',
     'today': 'Today',
     'no_transactions_today': 'No transactions today',
     'notifications': 'Notifications',
     'daily_reminders': 'Daily reminders',
-    'notif_intro': 'Get a friendly nudge to log your transactions. Everything is scheduled locally on your device — no account, no internet.',
+    'notif_intro':
+        'Get a friendly nudge to log your transactions. Everything is scheduled locally on your device — no account, no internet.',
     'slot_morning': 'Morning check-in',
     'slot_midday': 'Quick money check',
     'slot_evening': 'Daily money check',
     'time': 'Time',
-    'permission_needed': 'Notifications are disabled for Money Tracker. Please allow them in the system settings to receive reminders.',
+    'permission_needed':
+        'Notifications are disabled for Money Tracker. Please allow them in the system settings to receive reminders.',
     'net_cashflow': 'Net cash-flow',
     'net_cashflow_hint': 'Rolling 6 months · income minus expenses',
     'spending_habits': 'Spending habits',
@@ -277,7 +304,8 @@ class AppStrings {
     'cancel': 'Annuler',
     'confirm': 'Confirmer',
     'confirm_delete': 'Supprimer cette transaction ?',
-    'confirm_delete_cat': 'Supprimer cette catégorie ? Les transactions iront dans « Autre ».',
+    'confirm_delete_cat':
+        'Supprimer cette catégorie ? Les transactions iront dans « Autre ».',
     'confirm_delete_cat_unused': 'Supprimer cette catégorie ?',
     'delete_cat_used':
         'Cette catégorie est utilisée par {n} transaction(s). La supprimer ne supprimera pas vos transactions — elles seront déplacées vers « Autre ».',
@@ -352,6 +380,22 @@ class AppStrings {
     'insights': 'Aperçus',
     'settings': 'Réglages',
     'currency': 'Devise',
+    'currency_code': 'Code de la devise',
+    'currency_symbol': 'Symbole',
+    'currency_name': 'Nom de la devise',
+    'symbol_before_amount': 'Symbole avant le montant',
+    'add_custom_currency': 'Ajouter une devise personnalisée',
+    'currency_history': 'Transactions existantes',
+    'currency_keep': 'Conserver les montants existants',
+    'currency_keep_desc':
+        'Les transactions existantes gardent leur devise d\u2019origine. Les nouvelles utilisent la nouvelle devise.',
+    'currency_convert': 'Convertir les montants existants',
+    'currency_convert_desc':
+        'Convertir les transactions existantes dans la nouvelle devise selon votre taux.',
+    'conversion_rate': 'Taux de conversion',
+    'currency_convert_error': 'Saisissez un taux supérieur à 0.',
+    'currency_saved': 'Devise enregistrée',
+    'currency_added': 'Devise ajoutée',
     'language': 'Langue',
     'theme': 'Thème',
     'light': 'Clair',
@@ -374,13 +418,15 @@ class AppStrings {
     'backup_create': 'Créer une sauvegarde',
     'restore': 'Restaurer',
     'delete_all': 'Tout supprimer',
-    'delete_all_confirm': 'Cela supprimera définitivement toutes vos données. Continuer ?',
+    'delete_all_confirm':
+        'Cela supprimera définitivement toutes vos données. Continuer ?',
     'type_confirm': 'Tapez SUPPRIMER pour confirmer',
     'about': 'À propos',
     'version': 'Version',
     'made_by': 'Créé par Djouablia Mohamed Islam',
     'empty_transactions': 'Votre parcours financier commence ici.',
-    'empty_transactions_sub': 'Enregistrez votre premier revenu ou dépense en quelques secondes.',
+    'empty_transactions_sub':
+        'Enregistrez votre premier revenu ou dépense en quelques secondes.',
     'add_first': 'Ajouter votre première transaction',
     'demo_data': 'Données de démonstration',
     'demo_data_banner': 'Vous visualisez des données d\u2019exemple.',
@@ -404,18 +450,25 @@ class AppStrings {
     'savings_potential': 'Épargne',
     'expenses_total': 'Total des dépenses',
     'incomes_total': 'Total des revenus',
-    'largest_category': 'Votre plus grande catégorie de dépenses ce mois-ci est {c}.',
+    'largest_category':
+        'Votre plus grande catégorie de dépenses ce mois-ci est {c}.',
     'spent_x_week': 'Vous avez dépensé {a} en {c} cette semaine.',
     'tx_x_month': 'Vous avez fait {n} transactions {c} ce mois-ci.',
-    'income_vs_last': 'Votre revenu ce mois-ci est {a} {dir} que le mois dernier.',
+    'income_vs_last':
+        'Votre revenu ce mois-ci est {a} {dir} que le mois dernier.',
     'higher': 'plus élevé',
     'lower': 'plus bas',
     'committed_note': 'Vos dépenses récurrentes totalisent {a} par mois.',
-    'expense_vs_last': 'Vos dépenses ce mois-ci sont {a} {dir} que le mois dernier.',
+    'expense_vs_last':
+        'Vos dépenses ce mois-ci sont {a} {dir} que le mois dernier.',
     'no_prev_month': 'Pas de données pour le mois précédent',
     'avg_daily': 'Dépense moyenne quotidienne',
     'add_category': 'Nouvelle catégorie',
     'category_name': 'Nom de la catégorie',
+    'category_name_en': 'Nom (anglais)',
+    'category_name_fr': 'Nom (français)',
+    'category_name_ar': 'Nom (arabe)',
+    'category_names_required': 'Renseignez les trois noms.',
     'choose_icon': 'Choisir une icône',
     'custom': 'Personnalisé',
     'summary': 'Résumé',
@@ -438,19 +491,22 @@ class AppStrings {
     'categories': 'Catégories',
     'expense_categories': 'Catégories de dépenses',
     'income_categories': 'Catégories de revenus',
-    'default_category_note': 'Les catégories standard peuvent être renommées mais pas supprimées — votre historique reste intact.',
+    'default_category_note':
+        'Les catégories standard peuvent être renommées mais pas supprimées — votre historique reste intact.',
     'recent': 'Récents',
     'today_net': 'Net du jour',
     'today': "Aujourd\u2019hui",
     'no_transactions_today': 'Aucune transaction aujourd\u2019hui',
     'notifications': 'Notifications',
     'daily_reminders': 'Rappels quotidiens',
-    'notif_intro': 'Un petit rappel pour enregistrer vos transactions. Tout est planifié localement sur votre appareil — sans compte, sans internet.',
+    'notif_intro':
+        'Un petit rappel pour enregistrer vos transactions. Tout est planifié localement sur votre appareil — sans compte, sans internet.',
     'slot_morning': 'Point du matin',
     'slot_midday': 'Bilan rapide',
     'slot_evening': 'Bilan du jour',
     'time': 'Heure',
-    'permission_needed': 'Les notifications sont désactivées pour Money Tracker. Autorisez-les dans les réglages système pour recevoir les rappels.',
+    'permission_needed':
+        'Les notifications sont désactivées pour Money Tracker. Autorisez-les dans les réglages système pour recevoir les rappels.',
     'net_cashflow': 'Flux de trésorerie net',
     'net_cashflow_hint': '6 derniers mois · entrées moins sorties',
     'spending_habits': 'Habitudes de dépense',
@@ -576,6 +632,22 @@ class AppStrings {
     'insights': 'ملاحظات ذكية',
     'settings': 'الإعدادات',
     'currency': 'العملة',
+    'currency_code': 'رمز العملة',
+    'currency_symbol': 'الرمز',
+    'currency_name': 'اسم العملة',
+    'symbol_before_amount': 'الرمز قبل المبلغ',
+    'add_custom_currency': 'إضافة عملة مخصصة',
+    'currency_history': 'المعاملات الحالية',
+    'currency_keep': 'الاحتفاظ بالمبالغ الحالية',
+    'currency_keep_desc':
+        'تبقى المعاملات القديمة بعملتها الأصلية، والجديدة تستخدم العملة الجديدة.',
+    'currency_convert': 'تحويل المبالغ الحالية',
+    'currency_convert_desc':
+        'تحويل المعاملات القديمة إلى العملة الجديدة بسعر التحويل.',
+    'conversion_rate': 'سعر التحويل',
+    'currency_convert_error': 'أدخل سعرًا أكبر من صفر.',
+    'currency_saved': 'تم حفظ العملة',
+    'currency_added': 'تمت إضافة العملة',
     'language': 'اللغة',
     'theme': 'المظهر',
     'light': 'فاتح',
@@ -640,6 +712,10 @@ class AppStrings {
     'avg_daily': 'متوسط المصروف اليومي',
     'add_category': 'فئة جديدة',
     'category_name': 'اسم الفئة',
+    'category_name_en': 'الاسم (بالإنكليزية)',
+    'category_name_fr': 'الاسم (بالفرنسية)',
+    'category_name_ar': 'الاسم (بالعربية)',
+    'category_names_required': 'أدخل الأسماء الثلاثة.',
     'choose_icon': 'اختر أيقونة',
     'custom': 'مخصص',
     'summary': 'الملخص',
@@ -662,19 +738,22 @@ class AppStrings {
     'categories': 'الفئات',
     'expense_categories': 'فئات المصروفات',
     'income_categories': 'فئات الدخل',
-    'default_category_note': 'يمكن إعادة تسمية الفئات الأساسية لكن لا يمكن حذفها — يظل سجلك آمنًا.',
+    'default_category_note':
+        'يمكن إعادة تسمية الفئات الأساسية لكن لا يمكن حذفها — يظل سجلك آمنًا.',
     'recent': 'الأخيرة',
     'today_net': 'صافي اليوم',
     'today': 'اليوم',
     'no_transactions_today': 'لا توجد معاملات اليوم',
     'notifications': 'الإشعارات',
     'daily_reminders': 'تذكيرات يومية',
-    'notif_intro': 'تذكير لطيف لتسجيل معاملاتك. كل شيء يُجدول محليًا على جهازك — بدون حساب ولا إنترنت.',
+    'notif_intro':
+        'تذكير لطيف لتسجيل معاملاتك. كل شيء يُجدول محليًا على جهازك — بدون حساب ولا إنترنت.',
     'slot_morning': 'تسجيل الصباح',
     'slot_midday': 'متابعة سريعة',
     'slot_evening': 'مراجعة اليوم',
     'time': 'الوقت',
-    'permission_needed': 'الإشعارات معطّلة لتطبيق Money Tracker. يرجى السماح بها في إعدادات النظام لتلقي التذكيرات.',
+    'permission_needed':
+        'الإشعارات معطّلة لتطبيق Money Tracker. يرجى السماح بها في إعدادات النظام لتلقي التذكيرات.',
     'net_cashflow': 'التدفق النقدي الصافي',
     'net_cashflow_hint': 'آخر 6 أشهر · الدخل ناقص المصاريف',
     'spending_habits': 'عادات الإنفاق',
@@ -691,9 +770,10 @@ class AppStrings {
 
   /// Default expense category slug -> localized display name.
   String categoryName(String slug) {
-    final map = lang == 'fr'
-        ? _catFr
-        : lang == 'ar'
+    final map =
+        lang == 'fr'
+            ? _catFr
+            : lang == 'ar'
             ? _catAr
             : _catEn;
     // Custom/renamed categories store a slugged readable name; render it with
@@ -704,6 +784,17 @@ class AppStrings {
         .where((s) => s.isNotEmpty)
         .map((s) => '${s[0].toUpperCase()}${s.substring(1)}')
         .join(' ');
+  }
+
+  (String en, String fr, String ar) categoryNames(String slug) {
+    String resolve(Map<String, String> map) =>
+        map[slug] ??
+        slug
+            .split('_')
+            .where((s) => s.isNotEmpty)
+            .map((s) => '${s[0].toUpperCase()}${s.substring(1)}')
+            .join(' ');
+    return (resolve(_catEn), resolve(_catFr), resolve(_catAr));
   }
 
   static const Map<String, String> _catEn = {

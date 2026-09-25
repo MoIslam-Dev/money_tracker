@@ -39,7 +39,7 @@ void main() {
     await pumpApp(tester);
 
     expect(find.byType(HomeShell), findsOneWidget);
-    expect(find.text('0 DA'), findsWidgets);
+    expect(find.textContaining('0 DA'), findsWidgets);
   });
 
   testWidgets('quick add sheet opens from the center quick-add button',
