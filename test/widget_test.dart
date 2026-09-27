@@ -75,6 +75,21 @@ void main() {
     expect(find.text('TODAY'), findsOneWidget);
   });
 
+  testWidgets('stats future months render instead of crashing', (tester) async {
+    await pumpApp(tester);
+
+    await tester.tap(find.byIcon(Icons.pie_chart_outline_rounded));
+    await tester.pump(const Duration(milliseconds: 400));
+
+    for (var i = 0; i < 2; i++) {
+      await tester.tap(find.byIcon(Icons.chevron_right));
+      await tester.pump(const Duration(milliseconds: 300));
+    }
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('Statistics'), findsWidgets);
+  });
+
   testWidgets('settings opens the categories and reminders screens',
       (tester) async {
     await pumpApp(tester);

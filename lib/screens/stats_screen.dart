@@ -565,17 +565,26 @@ class _StatsScreenState extends State<StatsScreen> {
     final state = context.watch<AppState>();
     final strings = state.strings;
     final t = Theme.of(context);
-    final rows = <({DateTime m, int inc, int exp})>[];
+    final month = state.currentMonth;
+    final prev = DateTime(month.year, month.month - 1);
+
+    final active = (
+      m: month,
+      inc: state.monthTotals(month).$1,
+      exp: state.monthTotals(month).$2,
+    );
+    final prevRow = (
+      m: prev,
+      inc: state.monthTotals(prev).$1,
+      exp: state.monthTotals(prev).$2,
+    );
+
+    final trendRows = <({DateTime m, int inc, int exp})>[];
     for (var i = 5; i >= 0; i--) {
       final m = DateTime(DateTime.now().year, DateTime.now().month - i);
       final (inc, exp) = state.monthTotals(m);
-      rows.add((m: m, inc: inc, exp: exp));
+      trendRows.add((m: m, inc: inc, exp: exp));
     }
-
-    final activeIdx = rows.indexWhere(
-      (r) => _isSameMonth(r.m, state.currentMonth),
-    );
-    final prevIdx = activeIdx > 0 ? activeIdx - 1 : -1;
 
     return SectionCard(
       padding: const EdgeInsets.all(16),
@@ -590,37 +599,21 @@ class _StatsScreenState extends State<StatsScreen> {
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(
-                child: _monthMini(context, rows[activeIdx], isActive: true),
-              ),
+              Expanded(child: _monthMini(context, active, isActive: true)),
               const SizedBox(width: 12),
-              if (prevIdx >= 0)
-                Expanded(child: _monthMini(context, rows[prevIdx]))
-              else
-                Expanded(
-                  child: Center(
-                    child: Text(
-                      strings.tr('no_prev_month'),
-                      style: t.textTheme.labelSmall?.copyWith(
-                        color: t.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                ),
+              Expanded(child: _monthMini(context, prevRow)),
             ],
           ),
-          if (prevIdx >= 0) ...[
-            const SizedBox(height: 14),
-            Divider(height: 1, color: t.dividerColor),
-            const SizedBox(height: 12),
-            _diffRow(context, rows[activeIdx], rows[prevIdx]),
-          ],
+          const SizedBox(height: 14),
+          Divider(height: 1, color: t.dividerColor),
+          const SizedBox(height: 12),
+          _diffRow(context, active, prevRow),
           const SizedBox(height: 16),
           SizedBox(
             height: 130,
             child: TrendLine(
-              income: [for (final r in rows) (_monthKey(r.m), r.inc)],
-              expense: [for (final r in rows) (_monthKey(r.m), r.exp)],
+              income: [for (final r in trendRows) (_monthKey(r.m), r.inc)],
+              expense: [for (final r in trendRows) (_monthKey(r.m), r.exp)],
             ),
           ),
         ],
@@ -1178,7 +1171,7 @@ class _CategoryTxScreen extends StatelessWidget {
   }
 }
 
-/// "What if this category cost less?" simulation for a single month.
+/// "What if this category cost less AND I earned more?" scenario planner.
 class _WhatIfSheet extends StatefulWidget {
   final int categoryId;
   final DateTime month;
@@ -1189,20 +1182,25 @@ class _WhatIfSheet extends StatefulWidget {
 }
 
 class _WhatIfSheetState extends State<_WhatIfSheet> {
-  late final TextEditingController _controller;
-  late final FocusNode _focus;
+  late final TextEditingController _target;
+  late final TextEditingController _income;
+  late final FocusNode _targetFocus;
+  late final FocusNode _incomeFocus;
 
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController();
-    _focus = FocusNode();
+    _target = TextEditingController(text: '');
+    _income = TextEditingController(text: '');
+    _targetFocus = FocusNode();
+    _incomeFocus = FocusNode();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final state = context.read<AppState>();
-      final avg = _average(state, widget.month, widget.categoryId);
-      if (avg != null) {
-        _controller.text = '$avg';
+      final txs = _categoryTxs(state);
+      if (txs.isNotEmpty) {
+        final total = txs.fold<int>(0, (s, x) => s + x.amount);
+        _target.text = '${total ~/ txs.length}';
         setState(() {});
       }
     });
@@ -1210,26 +1208,65 @@ class _WhatIfSheetState extends State<_WhatIfSheet> {
 
   @override
   void dispose() {
-    _controller.dispose();
-    _focus.dispose();
+    _target.dispose();
+    _income.dispose();
+    _targetFocus.dispose();
+    _incomeFocus.dispose();
     super.dispose();
   }
 
-  static int? _average(AppState state, DateTime month, int categoryId) {
-    final prefix = '${month.year}-${month.month.toString().padLeft(2, '0')}';
-    final txs =
-        state.transactions
-            .where(
-              (x) =>
-                  x.isExpense &&
-                  x.currency == state.currency &&
-                  x.categoryId == categoryId &&
-                  x.date.startsWith(prefix),
-            )
-            .toList();
-    if (txs.isEmpty) return null;
-    final total = txs.fold<int>(0, (s, x) => s + x.amount);
-    return total ~/ txs.length;
+  List<AppTransaction> _categoryTxs(AppState state) {
+    final prefix =
+        '${widget.month.year}-${widget.month.month.toString().padLeft(2, '0')}';
+    return state.transactions
+        .where(
+          (x) =>
+              x.isExpense &&
+              x.currency == state.currency &&
+              x.categoryId == widget.categoryId &&
+              x.date.startsWith(prefix),
+        )
+        .toList();
+  }
+
+  void _onChanged(TextEditingController c, String raw) {
+    final cleaned = sanitizeAmountText(raw);
+    if (cleaned != raw) {
+      c.value = TextEditingValue(
+        text: cleaned,
+        selection: TextSelection.collapsed(offset: cleaned.length),
+      );
+    }
+    setState(() {});
+  }
+
+  TextField _amountField(
+    BuildContext context,
+    TextEditingController c,
+    FocusNode focus, {
+    required String label,
+    bool enabled = true,
+  }) {
+    final t = Theme.of(context);
+    return TextField(
+      controller: c,
+      focusNode: focus,
+      keyboardType: TextInputType.number,
+      enabled: enabled,
+      style: t.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+      decoration: InputDecoration(
+        labelText: label,
+        suffixText: context.watch<AppState>().currencyLabel,
+        filled: true,
+        fillColor: t.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+        prefixIcon: const Icon(Icons.payments_rounded, size: 20),
+      ),
+      onChanged: (raw) => _onChanged(c, raw),
+    );
   }
 
   @override
@@ -1237,43 +1274,45 @@ class _WhatIfSheetState extends State<_WhatIfSheet> {
     final state = context.watch<AppState>();
     final strings = state.strings;
     final t = Theme.of(context);
-    final prefix =
-        '${widget.month.year}-${widget.month.month.toString().padLeft(2, '0')}';
-    final txs =
-        state.transactions
-            .where(
-              (x) =>
-                  x.isExpense &&
-                  x.currency == state.currency &&
-                  x.categoryId == widget.categoryId &&
-                  x.date.startsWith(prefix),
-            )
-            .toList();
+    final cat = state.categoryById(widget.categoryId);
+    final label = cat == null ? strings.tr('other') : state.categoryLabel(cat);
+    final monthLabel =
+        '${monthName(widget.month.month, strings.lang)} ${widget.month.year}';
+
+    final txs = _categoryTxs(state);
+    final count = txs.length;
     final oldTotal = txs.fold<int>(0, (s, x) => s + x.amount);
-    final target = parseAmount(_controller.text) ?? 0;
-    final saved =
+    final target = parseAmount(_target.text) ?? 0;
+    final kept =
         target > 0
             ? txs.fold<int>(
                 0,
                 (s, x) => s + (x.amount > target ? x.amount - target : 0),
               )
             : 0;
-    final newTotal = oldTotal - saved;
+    final newTotal = oldTotal - kept;
+    final extraIncome = parseAmount(_income.text) ?? 0;
+
     final (inc, exp) = state.monthTotals(widget.month);
-    final oldShare = exp > 0 ? oldTotal / exp * 100 : 0.0;
-    final newDenom = exp - saved;
+    final newInc = inc + extraIncome;
+    final newExp = exp - kept;
+    final oldSavings = inc - exp;
+    final newSavings = newInc - newExp;
+    final net = kept + extraIncome;
+
+    final oldShare = exp > 0 ? oldTotal / exp * 100 : null;
+    final newShareDenom = newExp;
     final newShare =
-        newDenom > 0 ? newTotal / newDenom * 100 : 0.0;
-    final hasIncome = inc > 0;
-    final oldNet = inc - exp;
-    final newNet = inc - (exp - saved);
-    final oldRate =
-        hasIncome ? (oldNet < 0 ? 0.0 : oldNet / inc * 100) : null;
-    final newRate =
-        hasIncome ? (newNet < 0 ? 0.0 : newNet / inc * 100) : null;
+        newShareDenom > 0 ? newTotal / newShareDenom * 100 : null;
+    final rateBefore =
+        inc > 0 ? (oldSavings < 0 ? 0.0 : oldSavings / inc * 100) : null;
+    final rateAfter =
+        newInc > 0 ? (newSavings < 0 ? 0.0 : newSavings / newInc * 100) : null;
 
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
       child: SafeArea(
         top: false,
         child: SingleChildScrollView(
@@ -1285,144 +1324,233 @@ class _WhatIfSheetState extends State<_WhatIfSheet> {
               Row(
                 children: [
                   Container(
-                    width: 30,
-                    height: 30,
+                    width: 40,
+                    height: 40,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: t.colorScheme.primary.withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
                       Icons.calculate_rounded,
-                      size: 18,
+                      size: 22,
                       color: t.colorScheme.primary,
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
-                      strings.tr('whatif_desc'),
-                      style: t.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          strings
+                              .tr('whatif_scenario_title')
+                              .toUpperCase(),
+                          style: t.textTheme.labelSmall?.copyWith(
+                            color: t.colorScheme.primary,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          strings.tr('whatif_title').replaceAll('{c}', label),
+                          style: t.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        Text(
+                          '$monthLabel · ${state.currency}',
+                          style: t.textTheme.labelSmall?.copyWith(
+                            color: t.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _controller,
-                focusNode: _focus,
-                keyboardType: TextInputType.number,
-                style: t.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
+              const SizedBox(height: 10),
+              Text(
+                strings.tr('whatif_desc').replaceAll('{c}', label),
+                style: t.textTheme.bodySmall?.copyWith(
+                  color: t.colorScheme.onSurfaceVariant,
+                  height: 1.5,
                 ),
-                decoration: InputDecoration(
-                  labelText: strings.tr('target_price'),
-                  suffixText: state.currencyLabel,
-                  filled: true,
-                  fillColor: t.colorScheme.surfaceContainerHighest.withValues(
-                    alpha: 0.5,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
-                  prefixIcon: const Icon(Icons.payments_rounded),
-                ),
-                onChanged: (raw) {
-                  final cleaned = sanitizeAmountText(raw);
-                  if (cleaned != raw) {
-                    _controller.value = TextEditingValue(
-                      text: cleaned,
-                      selection: TextSelection.collapsed(
-                        offset: cleaned.length,
-                      ),
-                    );
-                  }
-                  setState(() {});
-                },
               ),
-              if (txs.isNotEmpty) ...[
+              const SizedBox(height: 18),
+              _sectionHeader(
+                context,
+                Icons.shopping_bag_rounded,
+                AppColors.expenseOn(context),
+                '${strings.tr('whatif_exp_section')} · $label',
+              ),
+              const SizedBox(height: 10),
+              _amountField(
+                context,
+                _target,
+                _targetFocus,
+                label: strings.tr('target_price'),
+                enabled: count > 0,
+              ),
+              if (count > 0) ...[
                 const SizedBox(height: 6),
                 Text(
                   strings
-                      .tr('transactions_count')
-                      .replaceAll('{n}', '${txs.length}'),
+                      .tr('whatif_exp_summary')
+                      .replaceAll('{n}', '$count')
+                      .replaceAll('{a}', state.money(oldTotal))
+                      .replaceAll('{b}', state.money(newTotal)),
                   style: t.textTheme.labelSmall?.copyWith(
                     color: t.colorScheme.onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(height: 18),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: AppColors.incomeOn(context).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(14),
+              ] else ...[
+                const SizedBox(height: 6),
+                Text(
+                  strings.tr('whatif_none'),
+                  style: t.textTheme.labelSmall?.copyWith(
+                    color: t.colorScheme.onSurfaceVariant,
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        strings.tr('whatif_kept'),
-                        style: t.textTheme.labelSmall?.copyWith(
-                          color: AppColors.incomeOn(context),
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        state.money(saved),
-                        style: t.textTheme.headlineSmall?.copyWith(
-                          color: AppColors.incomeOn(context),
-                          fontWeight: FontWeight.w800,
-                          fontFamily: 'PlayfairDisplay',
-                        ),
-                      ),
+                ),
+              ],
+              const SizedBox(height: 18),
+              _sectionHeader(
+                context,
+                Icons.savings_rounded,
+                AppColors.incomeOn(context),
+                strings.tr('whatif_income_section'),
+              ),
+              const SizedBox(height: 10),
+              _amountField(
+                context,
+                _income,
+                _incomeFocus,
+                label: strings.tr('extra_income'),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                strings.tr('whatif_income_note'),
+                style: t.textTheme.labelSmall?.copyWith(
+                  color: t.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 18),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppColors.incomeOn(context).withValues(alpha: 0.16),
+                      t.colorScheme.primary.withValues(alpha: 0.10),
                     ],
                   ),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: AppColors.incomeOn(context).withValues(alpha: 0.4),
+                  ),
                 ),
-                const SizedBox(height: 16),
-                _whatIfRow(
-                  context,
-                  strings.tr('whatif_new_total'),
-                  state.money(newTotal),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      strings.tr('whatif_net'),
+                      style: t.textTheme.labelSmall?.copyWith(
+                        color: AppColors.incomeOn(context),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '+ ${state.money(net)}',
+                      style: t.textTheme.headlineMedium?.copyWith(
+                        color: AppColors.incomeOn(context),
+                        fontWeight: FontWeight.w800,
+                        fontFamily: 'PlayfairDisplay',
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    _whatIfRow(
+                      context,
+                      strings
+                          .tr('whatif_kept_from')
+                          .replaceAll('{c}', label),
+                      state.money(kept),
+                    ),
+                    const SizedBox(height: 6),
+                    _whatIfRow(
+                      context,
+                      strings.tr('whatif_extra_income'),
+                      '+ ${state.money(extraIncome)}',
+                    ),
+                  ],
                 ),
+              ),
+              const SizedBox(height: 16),
+              _whatIfRow(
+                context,
+                strings.tr('whatif_new_total'),
+                '${state.money(oldTotal)} → ${state.money(newTotal)}',
+              ),
+              const SizedBox(height: 8),
+              _whatIfRow(
+                context,
+                strings.tr('whatif_share'),
+                oldShare == null || newShare == null
+                    ? '—'
+                    : '${oldShare.toStringAsFixed(1)}% → ${newShare.toStringAsFixed(1)}%',
+              ),
+              const SizedBox(height: 8),
+              _whatIfRow(
+                context,
+                strings.tr('whatif_savings'),
+                '${state.money(oldSavings)} → ${state.money(newSavings)}',
+              ),
+              if (rateAfter != null) ...[
                 const SizedBox(height: 8),
                 _whatIfRow(
                   context,
-                  strings.tr('whatif_share'),
-                  '${oldShare.toStringAsFixed(1)}% → ${newShare.toStringAsFixed(1)}%',
-                ),
-                if (hasIncome) ...[
-                  const SizedBox(height: 8),
-                  _whatIfRow(
-                    context,
-                    strings.tr('whatif_rate'),
-                    '${oldRate!.toStringAsFixed(1)}% → ${newRate!.toStringAsFixed(1)}%',
-                  ),
-                ] else ...[
-                  const SizedBox(height: 8),
-                  _whatIfRow(
-                    context,
-                    strings.tr('whatif_balance'),
-                    '${state.money(oldNet)} → ${state.money(newNet)}',
-                  ),
-                ],
-              ] else ...[
-                const SizedBox(height: 14),
-                Text(
-                  strings.tr('whatif_none'),
-                  style: t.textTheme.bodyMedium?.copyWith(
-                    color: t.colorScheme.onSurfaceVariant,
-                  ),
+                  strings.tr('whatif_rate'),
+                  rateBefore == null
+                      ? '— → ${rateAfter.toStringAsFixed(1)}%'
+                      : '${rateBefore.toStringAsFixed(1)}% → ${rateAfter.toStringAsFixed(1)}%',
                 ),
               ],
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _sectionHeader(
+    BuildContext context,
+    IconData icon,
+    Color color,
+    String title,
+  ) {
+    final t = Theme.of(context);
+    return Row(
+      children: [
+        Container(
+          width: 26,
+          height: 26,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.14),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, size: 15, color: color),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: t.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w800),
+        ),
+      ],
     );
   }
 
@@ -1433,16 +1561,14 @@ class _WhatIfSheetState extends State<_WhatIfSheet> {
         Expanded(
           child: Text(
             label,
-            style: t.textTheme.bodyMedium?.copyWith(
+            style: t.textTheme.bodySmall?.copyWith(
               color: t.colorScheme.onSurfaceVariant,
             ),
           ),
         ),
         Text(
           value,
-          style: t.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w800,
-          ),
+          style: t.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
         ),
       ],
     );
