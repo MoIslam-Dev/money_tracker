@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/models.dart';
 import '../state/app_state.dart';
 import '../theme/theme.dart';
 import '../utils/money.dart';
@@ -16,18 +17,38 @@ List<String> buildInsights(BuildContext context) {
 
   final (inc, _) = state.monthTotals(month);
 
+  var expCount = 0, expSum = 0, maxExp = -1;
+  AppTransaction? maxTx;
+  for (final t in state.transactions) {
+    if (t.currency != state.currency) continue;
+    final d = parseDateKey(t.date);
+    if (d.year != month.year || d.month != month.month) continue;
+    if (!t.isExpense) continue;
+    expCount++;
+    expSum += t.amount;
+    if (t.amount > maxExp) {
+      maxExp = t.amount;
+      maxTx = t;
+    }
+  }
+
   final catTotals = state.categoryTotalsInMonth(month);
   if (catTotals.isNotEmpty) {
     final top = catTotals.entries.reduce((a, b) => b.value > a.value ? b : a);
     final topCat = state.categoryById(top.key);
+    final topLabel =
+        topCat == null ? strings.tr('other') : state.categoryLabel(topCat);
     out.add(
-      strings
-          .tr('largest_category')
-          .replaceAll(
-            '{c}',
-            topCat == null ? strings.tr('other') : state.categoryLabel(topCat),
-          ),
+      strings.tr('largest_category').replaceAll('{c}', topLabel),
     );
+    if (expSum > 0 && top.value / expSum >= 0.3) {
+      out.add(
+        strings
+            .tr('top_category_share')
+            .replaceAll('{c}', topLabel)
+            .replaceAll('{p}', (top.value / expSum * 100).toStringAsFixed(0)),
+      );
+    }
   }
 
   final monday = now.subtract(Duration(days: now.weekday - 1));
@@ -91,6 +112,44 @@ List<String> buildInsights(BuildContext context) {
             dExp >= 0 ? strings.tr('higher') : strings.tr('lower'),
           ),
     );
+    if (inc > 0) {
+      final curRate = state.savingsRate(month);
+      final prevRate = state.savingsRate(prev);
+      out.add(
+        strings
+            .tr('savings_rate_vs_last')
+            .replaceAll('{r}', curRate.toStringAsFixed(1))
+            .replaceAll('{p}', prevRate.toStringAsFixed(1))
+            .replaceAll(
+              '{dir}',
+              curRate >= prevRate
+                  ? strings.tr('higher')
+                  : strings.tr('lower'),
+            ),
+      );
+    }
+  }
+
+  if (expCount > 0) {
+    out.add(
+      strings
+          .tr('avg_expense_tx')
+          .replaceAll('{a}', state.money(expSum ~/ expCount))
+          .replaceAll('{n}', '$expCount'),
+    );
+    if (maxTx != null) {
+      final cat =
+          maxTx.categoryId == null ? null : state.categoryById(maxTx.categoryId);
+      out.add(
+        strings
+            .tr('largest_expense_month')
+            .replaceAll('{a}', state.money(maxTx.amount))
+            .replaceAll(
+              '{c}',
+              cat == null ? strings.tr('other') : state.categoryLabel(cat),
+            ),
+      );
+    }
   }
 
   if (state.committedMonthly > 0) {

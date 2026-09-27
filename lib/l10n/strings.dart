@@ -287,6 +287,22 @@ class AppStrings {
         'The single biggest expenses and the biggest income of the month at a glance.',
     'habits_window': 'Spending habits window',
     'weeks': '{n} weeks',
+    'top_category_share':
+        '{c} is {p}% of your spending this month — worth watching',
+    'avg_expense_tx': 'Average expense: {a} across {n} transactions',
+    'largest_expense_month': 'Largest single expense: {a} in {c}',
+    'savings_rate_vs_last':
+        'Savings rate is {r}%, {dir} than last month ({p}%)',
+    'simulate_price': 'Simulate a lower price',
+    'whatif_desc':
+        'Set a target price per transaction and see how much more you would keep this month. Transactions above the target are counted at that price.',
+    'target_price': 'Target price per transaction',
+    'whatif_kept': 'You would keep {a} this month',
+    'whatif_new_total': 'New category total',
+    'whatif_share': 'Share of expenses',
+    'whatif_rate': 'Savings rate',
+    'whatif_balance': 'Monthly balance',
+    'whatif_none': 'No expenses for this category this month to simulate.',
   };
 
   static const Map<String, String> _fr = {
@@ -561,6 +577,23 @@ class AppStrings {
         'Les plus grosses dépenses et le plus gros revenu du mois en un coup d’œil.',
     'habits_window': 'Fenêtre des habitudes de dépense',
     'weeks': '{n} semaines',
+    'top_category_share':
+        '{c} représente {p}% de vos dépenses ce mois — à surveiller',
+    'avg_expense_tx': 'Dépense moyenne : {a} sur {n} transactions',
+    'largest_expense_month': 'Plus grosse dépense : {a} dans {c}',
+    'savings_rate_vs_last':
+        "Taux d'épargne de {r}%, {dir} que le mois dernier ({p}%)",
+    'simulate_price': 'Simuler un prix plus bas',
+    'whatif_desc':
+        'Fixez un prix cible par transaction et voyez combien vous garderiez ce mois-ci. Les transactions au-dessus du prix cible sont comptées à ce prix.',
+    'target_price': 'Prix cible par transaction',
+    'whatif_kept': 'Vous garderiez {a} ce mois-ci',
+    'whatif_new_total': 'Nouveau total de la catégorie',
+    'whatif_share': 'Part des dépenses',
+    'whatif_rate': "Taux d'épargne",
+    'whatif_balance': 'Solde mensuel',
+    'whatif_none':
+        'Aucune dépense de cette catégorie ce mois à simuler.',
   };
 
   static const Map<String, String> _ar = {
@@ -829,6 +862,22 @@ class AppStrings {
         'أكبر المصروفات وأكبر دخل في الشهر في نظرة واحدة.',
     'habits_window': 'نافذة عادات الإنفاق',
     'weeks': '{n} أسابيع',
+    'top_category_share':
+        '{c} هي {p}% من مصروفاتك هذا الشهر — تستحق المراقبة',
+    'avg_expense_tx': 'متوسط المصروف: {a} عبر {n} عملية',
+    'largest_expense_month': 'أكبر مصروف منفرد: {a} في {c}',
+    'savings_rate_vs_last':
+        'نسبة الادخار {r}%، {dir} عن الشهر الماضي ({p}%)',
+    'simulate_price': 'محاكاة سعر أقل',
+    'whatif_desc':
+        'حدد سعرًا مستهدفًا لكل عملية وشاهد كم ستوفر أكثر هذا الشهر. العمليات فوق السعر المستهدف تُحتسب به.',
+    'target_price': 'السعر المستهدف لكل عملية',
+    'whatif_kept': 'ستوفر {a} هذا الشهر',
+    'whatif_new_total': 'الإجمالي الجديد للفئة',
+    'whatif_share': 'حصة المصاريف',
+    'whatif_rate': 'نسبة الادخار',
+    'whatif_balance': 'الرصيد الشهري',
+    'whatif_none': 'لا توجد مصاريف لهذه الفئة هذا الشهر للمحاكاة.',
   };
 
   /// Default expense category slug -> localized display name.

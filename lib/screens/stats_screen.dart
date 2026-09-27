@@ -1086,6 +1086,14 @@ class _CategoryTxScreen extends StatelessWidget {
   final DateTime month;
   const _CategoryTxScreen({required this.categoryId, required this.month});
 
+  Future<void> _showWhatIf(BuildContext context) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => _WhatIfSheet(categoryId: categoryId, month: month),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
@@ -1109,6 +1117,13 @@ class _CategoryTxScreen extends StatelessWidget {
         title: Text(
           cat == null ? strings.tr('other') : state.categoryLabel(cat),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.calculate_rounded),
+            tooltip: strings.tr('simulate_price'),
+            onPressed: () => _showWhatIf(context),
+          ),
+        ],
       ),
       body: SafeArea(
         top: false,
@@ -1159,6 +1174,277 @@ class _CategoryTxScreen extends StatelessWidget {
                   },
                 ),
       ),
+    );
+  }
+}
+
+/// "What if this category cost less?" simulation for a single month.
+class _WhatIfSheet extends StatefulWidget {
+  final int categoryId;
+  final DateTime month;
+  const _WhatIfSheet({required this.categoryId, required this.month});
+
+  @override
+  State<_WhatIfSheet> createState() => _WhatIfSheetState();
+}
+
+class _WhatIfSheetState extends State<_WhatIfSheet> {
+  late final TextEditingController _controller;
+  late final FocusNode _focus;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+    _focus = FocusNode();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final state = context.read<AppState>();
+      final avg = _average(state, widget.month, widget.categoryId);
+      if (avg != null) {
+        _controller.text = '$avg';
+        setState(() {});
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focus.dispose();
+    super.dispose();
+  }
+
+  static int? _average(AppState state, DateTime month, int categoryId) {
+    final prefix = '${month.year}-${month.month.toString().padLeft(2, '0')}';
+    final txs =
+        state.transactions
+            .where(
+              (x) =>
+                  x.isExpense &&
+                  x.currency == state.currency &&
+                  x.categoryId == categoryId &&
+                  x.date.startsWith(prefix),
+            )
+            .toList();
+    if (txs.isEmpty) return null;
+    final total = txs.fold<int>(0, (s, x) => s + x.amount);
+    return total ~/ txs.length;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.watch<AppState>();
+    final strings = state.strings;
+    final t = Theme.of(context);
+    final prefix =
+        '${widget.month.year}-${widget.month.month.toString().padLeft(2, '0')}';
+    final txs =
+        state.transactions
+            .where(
+              (x) =>
+                  x.isExpense &&
+                  x.currency == state.currency &&
+                  x.categoryId == widget.categoryId &&
+                  x.date.startsWith(prefix),
+            )
+            .toList();
+    final oldTotal = txs.fold<int>(0, (s, x) => s + x.amount);
+    final target = parseAmount(_controller.text) ?? 0;
+    final saved =
+        target > 0
+            ? txs.fold<int>(
+                0,
+                (s, x) => s + (x.amount > target ? x.amount - target : 0),
+              )
+            : 0;
+    final newTotal = oldTotal - saved;
+    final (inc, exp) = state.monthTotals(widget.month);
+    final oldShare = exp > 0 ? oldTotal / exp * 100 : 0.0;
+    final newDenom = exp - saved;
+    final newShare =
+        newDenom > 0 ? newTotal / newDenom * 100 : 0.0;
+    final hasIncome = inc > 0;
+    final oldNet = inc - exp;
+    final newNet = inc - (exp - saved);
+    final oldRate =
+        hasIncome ? (oldNet < 0 ? 0.0 : oldNet / inc * 100) : null;
+    final newRate =
+        hasIncome ? (newNet < 0 ? 0.0 : newNet / inc * 100) : null;
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 30,
+                    height: 30,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: t.colorScheme.primary.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.calculate_rounded,
+                      size: 18,
+                      color: t.colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      strings.tr('whatif_desc'),
+                      style: t.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _controller,
+                focusNode: _focus,
+                keyboardType: TextInputType.number,
+                style: t.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+                decoration: InputDecoration(
+                  labelText: strings.tr('target_price'),
+                  suffixText: state.currencyLabel,
+                  filled: true,
+                  fillColor: t.colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.5,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                  prefixIcon: const Icon(Icons.payments_rounded),
+                ),
+                onChanged: (raw) {
+                  final cleaned = sanitizeAmountText(raw);
+                  if (cleaned != raw) {
+                    _controller.value = TextEditingValue(
+                      text: cleaned,
+                      selection: TextSelection.collapsed(
+                        offset: cleaned.length,
+                      ),
+                    );
+                  }
+                  setState(() {});
+                },
+              ),
+              if (txs.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  strings
+                      .tr('transactions_count')
+                      .replaceAll('{n}', '${txs.length}'),
+                  style: t.textTheme.labelSmall?.copyWith(
+                    color: t.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: AppColors.incomeOn(context).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        strings.tr('whatif_kept'),
+                        style: t.textTheme.labelSmall?.copyWith(
+                          color: AppColors.incomeOn(context),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        state.money(saved),
+                        style: t.textTheme.headlineSmall?.copyWith(
+                          color: AppColors.incomeOn(context),
+                          fontWeight: FontWeight.w800,
+                          fontFamily: 'PlayfairDisplay',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _whatIfRow(
+                  context,
+                  strings.tr('whatif_new_total'),
+                  state.money(newTotal),
+                ),
+                const SizedBox(height: 8),
+                _whatIfRow(
+                  context,
+                  strings.tr('whatif_share'),
+                  '${oldShare.toStringAsFixed(1)}% → ${newShare.toStringAsFixed(1)}%',
+                ),
+                if (hasIncome) ...[
+                  const SizedBox(height: 8),
+                  _whatIfRow(
+                    context,
+                    strings.tr('whatif_rate'),
+                    '${oldRate!.toStringAsFixed(1)}% → ${newRate!.toStringAsFixed(1)}%',
+                  ),
+                ] else ...[
+                  const SizedBox(height: 8),
+                  _whatIfRow(
+                    context,
+                    strings.tr('whatif_balance'),
+                    '${state.money(oldNet)} → ${state.money(newNet)}',
+                  ),
+                ],
+              ] else ...[
+                const SizedBox(height: 14),
+                Text(
+                  strings.tr('whatif_none'),
+                  style: t.textTheme.bodyMedium?.copyWith(
+                    color: t.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _whatIfRow(BuildContext context, String label, String value) {
+    final t = Theme.of(context);
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            label,
+            style: t.textTheme.bodyMedium?.copyWith(
+              color: t.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+        Text(
+          value,
+          style: t.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
     );
   }
 }
