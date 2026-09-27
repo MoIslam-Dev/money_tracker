@@ -17,6 +17,7 @@ class StatsScreen extends StatefulWidget {
 
 class _StatsScreenState extends State<StatsScreen> {
   String _range = '30d';
+  int? _excludedCategory;
 
   @override
   Widget build(BuildContext context) {
@@ -46,6 +47,8 @@ class _StatsScreenState extends State<StatsScreen> {
               _donut(context, month),
               const SizedBox(height: 12),
               _categoryList(context, month),
+              const SizedBox(height: 24),
+              _excludeCard(context, month),
               const SizedBox(height: 24),
               _trendChart(context),
               const SizedBox(height: 24),
@@ -455,6 +458,206 @@ class _StatsScreenState extends State<StatsScreen> {
           Icon(Icons.chevron_right_rounded, color: t.colorScheme.outline),
         ],
       ),
+    );
+  }
+
+  Widget _excludeCard(BuildContext context, DateTime month) {
+    final state = context.watch<AppState>();
+    final strings = state.strings;
+    final t = Theme.of(context);
+    final totals =
+        state.categoryTotalsInMonth(month).entries.toList()
+          ..sort((a, b) => b.value.compareTo(a.value));
+
+    if (totals.isEmpty) {
+      return Text(
+        strings.tr('no_data_chart'),
+        style: t.textTheme.bodyMedium?.copyWith(
+          color: t.colorScheme.onSurfaceVariant,
+        ),
+      );
+    }
+
+    final exId = _excludedCategory != null &&
+            totals.any((e) => e.key == _excludedCategory)
+        ? _excludedCategory
+        : null;
+
+    return SectionCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _cardTitle(
+            context,
+            strings.tr('exclude_card_title'),
+            'stats_exclude',
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final e in totals)
+                Builder(
+                  builder: (context) {
+                    final cat = state.categoryById(e.key);
+                    return ChoiceChip(
+                      label: Text(
+                        cat == null
+                            ? strings.tr('other')
+                            : state.categoryLabel(cat),
+                      ),
+                      selected: e.key == exId,
+                      onSelected: (sel) => setState(
+                        () => _excludedCategory = sel ? e.key : null,
+                      ),
+                    );
+                  },
+                ),
+            ],
+          ),
+          if (exId != null) ...[
+            const SizedBox(height: 16),
+            _excludeResult(context, month, exId, totals),
+          ] else ...[
+            const SizedBox(height: 12),
+            Text(
+              strings.tr('exclude_hint'),
+              style: t.textTheme.bodySmall?.copyWith(
+                color: t.colorScheme.onSurfaceVariant,
+                height: 1.5,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _excludeResult(
+    BuildContext context,
+    DateTime month,
+    int exId,
+    List<MapEntry<int, int>> totals,
+  ) {
+    final state = context.watch<AppState>();
+    final strings = state.strings;
+    final t = Theme.of(context);
+    final cat = state.categoryById(exId);
+    final name = cat == null ? strings.tr('other') : state.categoryLabel(cat);
+    final added = totals.firstWhere((e) => e.key == exId).value;
+    final prefix = '${month.year}-${month.month.toString().padLeft(2, '0')}';
+    final n = state.transactions
+        .where(
+          (x) =>
+              x.isExpense &&
+              x.currency == state.currency &&
+              x.categoryId == exId &&
+              x.date.startsWith(prefix),
+        )
+        .length;
+    final (inc, exp) = state.monthTotals(month);
+    final oldSav = inc - exp;
+    final newSav = oldSav + added;
+    final oldRate = inc > 0 ? (oldSav < 0 ? 0.0 : oldSav / inc * 100) : null;
+    final newRate = inc > 0 ? (newSav < 0 ? 0.0 : newSav / inc * 100) : null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppColors.incomeOn(context).withValues(alpha: 0.16),
+                t.colorScheme.primary.withValues(alpha: 0.10),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: AppColors.incomeOn(context).withValues(alpha: 0.4),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                strings.tr('exclude_saved'),
+                style: t.textTheme.labelSmall?.copyWith(
+                  color: AppColors.incomeOn(context),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                state.money(added),
+                style: t.textTheme.headlineMedium?.copyWith(
+                  color: AppColors.incomeOn(context),
+                  fontWeight: FontWeight.w800,
+                  fontFamily: 'PlayfairDisplay',
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+        _resultRow(
+          context,
+          strings.tr('expenses'),
+          '${state.money(exp)} → ${state.money(exp - added)}',
+        ),
+        const SizedBox(height: 8),
+        _resultRow(
+          context,
+          strings.tr('whatif_savings'),
+          '${state.money(oldSav)} → ${state.money(newSav)}',
+        ),
+        if (newRate != null) ...[
+          const SizedBox(height: 8),
+          _resultRow(
+            context,
+            strings.tr('whatif_rate'),
+            oldRate == null
+                ? '— → ${newRate.toStringAsFixed(1)}%'
+                : '${oldRate.toStringAsFixed(1)}% → ${newRate.toStringAsFixed(1)}%',
+          ),
+        ],
+        const SizedBox(height: 10),
+        Text(
+          strings
+              .tr('exclude_note')
+              .replaceAll('{c}', name)
+              .replaceAll('{n}', '$n'),
+          style: t.textTheme.labelSmall?.copyWith(
+            color: t.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _resultRow(BuildContext context, String label, String value) {
+    final t = Theme.of(context);
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            label,
+            style: t.textTheme.bodySmall?.copyWith(
+              color: t.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+        Text(
+          value,
+          style: t.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
+        ),
+      ],
     );
   }
 
@@ -1183,17 +1386,13 @@ class _WhatIfSheet extends StatefulWidget {
 
 class _WhatIfSheetState extends State<_WhatIfSheet> {
   late final TextEditingController _target;
-  late final TextEditingController _income;
   late final FocusNode _targetFocus;
-  late final FocusNode _incomeFocus;
 
   @override
   void initState() {
     super.initState();
     _target = TextEditingController(text: '');
-    _income = TextEditingController(text: '');
     _targetFocus = FocusNode();
-    _incomeFocus = FocusNode();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final state = context.read<AppState>();
@@ -1209,9 +1408,7 @@ class _WhatIfSheetState extends State<_WhatIfSheet> {
   @override
   void dispose() {
     _target.dispose();
-    _income.dispose();
     _targetFocus.dispose();
-    _incomeFocus.dispose();
     super.dispose();
   }
 
@@ -1240,35 +1437,6 @@ class _WhatIfSheetState extends State<_WhatIfSheet> {
     setState(() {});
   }
 
-  TextField _amountField(
-    BuildContext context,
-    TextEditingController c,
-    FocusNode focus, {
-    required String label,
-    bool enabled = true,
-  }) {
-    final t = Theme.of(context);
-    return TextField(
-      controller: c,
-      focusNode: focus,
-      keyboardType: TextInputType.number,
-      enabled: enabled,
-      style: t.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-      decoration: InputDecoration(
-        labelText: label,
-        suffixText: context.watch<AppState>().currencyLabel,
-        filled: true,
-        fillColor: t.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide.none,
-        ),
-        prefixIcon: const Icon(Icons.payments_rounded, size: 20),
-      ),
-      onChanged: (raw) => _onChanged(c, raw),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
@@ -1291,23 +1459,19 @@ class _WhatIfSheetState extends State<_WhatIfSheet> {
               )
             : 0;
     final newTotal = oldTotal - kept;
-    final extraIncome = parseAmount(_income.text) ?? 0;
 
     final (inc, exp) = state.monthTotals(widget.month);
-    final newInc = inc + extraIncome;
-    final newExp = exp - kept;
     final oldSavings = inc - exp;
-    final newSavings = newInc - newExp;
-    final net = kept + extraIncome;
+    final newSavings = oldSavings + kept;
 
     final oldShare = exp > 0 ? oldTotal / exp * 100 : null;
-    final newShareDenom = newExp;
+    final newShareDenom = exp - kept;
     final newShare =
         newShareDenom > 0 ? newTotal / newShareDenom * 100 : null;
     final rateBefore =
         inc > 0 ? (oldSavings < 0 ? 0.0 : oldSavings / inc * 100) : null;
     final rateAfter =
-        newInc > 0 ? (newSavings < 0 ? 0.0 : newSavings / newInc * 100) : null;
+        inc > 0 ? (newSavings < 0 ? 0.0 : newSavings / inc * 100) : null;
 
     return Padding(
       padding: EdgeInsets.only(
@@ -1386,12 +1550,28 @@ class _WhatIfSheetState extends State<_WhatIfSheet> {
                 '${strings.tr('whatif_exp_section')} · $label',
               ),
               const SizedBox(height: 10),
-              _amountField(
-                context,
-                _target,
-                _targetFocus,
-                label: strings.tr('target_price'),
+              TextField(
+                controller: _target,
+                focusNode: _targetFocus,
+                keyboardType: TextInputType.number,
                 enabled: count > 0,
+                style: t.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+                decoration: InputDecoration(
+                  labelText: strings.tr('target_price'),
+                  suffixText: state.currencyLabel,
+                  filled: true,
+                  fillColor: t.colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.5,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                  prefixIcon: const Icon(Icons.payments_rounded, size: 20),
+                ),
+                onChanged: (raw) => _onChanged(_target, raw),
               ),
               if (count > 0) ...[
                 const SizedBox(height: 6),
@@ -1415,27 +1595,6 @@ class _WhatIfSheetState extends State<_WhatIfSheet> {
                 ),
               ],
               const SizedBox(height: 18),
-              _sectionHeader(
-                context,
-                Icons.savings_rounded,
-                AppColors.incomeOn(context),
-                strings.tr('whatif_income_section'),
-              ),
-              const SizedBox(height: 10),
-              _amountField(
-                context,
-                _income,
-                _incomeFocus,
-                label: strings.tr('extra_income'),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                strings.tr('whatif_income_note'),
-                style: t.textTheme.labelSmall?.copyWith(
-                  color: t.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 18),
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(14),
@@ -1457,7 +1616,9 @@ class _WhatIfSheetState extends State<_WhatIfSheet> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      strings.tr('whatif_net'),
+                      strings
+                          .tr('whatif_kept')
+                          .replaceAll('{a}', state.money(kept)),
                       style: t.textTheme.labelSmall?.copyWith(
                         color: AppColors.incomeOn(context),
                         fontWeight: FontWeight.w700,
@@ -1465,26 +1626,12 @@ class _WhatIfSheetState extends State<_WhatIfSheet> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '+ ${state.money(net)}',
+                      state.money(kept),
                       style: t.textTheme.headlineMedium?.copyWith(
                         color: AppColors.incomeOn(context),
                         fontWeight: FontWeight.w800,
                         fontFamily: 'PlayfairDisplay',
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    _whatIfRow(
-                      context,
-                      strings
-                          .tr('whatif_kept_from')
-                          .replaceAll('{c}', label),
-                      state.money(kept),
-                    ),
-                    const SizedBox(height: 6),
-                    _whatIfRow(
-                      context,
-                      strings.tr('whatif_extra_income'),
-                      '+ ${state.money(extraIncome)}',
                     ),
                   ],
                 ),

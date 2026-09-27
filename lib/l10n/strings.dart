@@ -297,21 +297,23 @@ class AppStrings {
     'whatif_scenario_title': 'Scenario',
     'whatif_title': 'What if {c} were cheaper?',
     'whatif_desc':
-        'Lower the target price of this category and/or add extra monthly income to see the combined effect on your savings.',
+        'Lower the target price of this category and see how much more you would keep this month.',
     'whatif_exp_section': 'Expenses',
-    'whatif_income_section': 'Income',
     'target_price': 'Target price per transaction',
     'whatif_exp_summary': '{n} expenses · {a} → {b}',
-    'extra_income': 'Extra income per month — raise / side job',
-    'whatif_income_note': 'Leave it at 0 if you plan no extra income.',
-    'whatif_kept_from': 'Keep from {c}',
-    'whatif_extra_income': 'Extra income',
-    'whatif_net': 'Net effect this month',
+    'whatif_kept': 'You would keep {a} this month',
     'whatif_new_total': 'New category total',
     'whatif_share': 'Share of expenses',
     'whatif_rate': 'Savings rate',
     'whatif_savings': 'Savings this month',
     'whatif_none': 'No expenses for this category this month to simulate.',
+    'exclude_card_title': 'What if you cut a category?',
+    'stats_exclude':
+        'Pick a category to see how your month changes if you stopped spending on it entirely — the money you would save, and your new expenses, savings and savings rate.',
+    'exclude_hint':
+        'Select a category to see how much more you would keep if you removed its spending this month.',
+    'exclude_saved': 'You would save this month',
+    'exclude_note': 'Removing {c} and its {n} expenses this month',
   };
 
   static const Map<String, String> _fr = {
@@ -596,23 +598,24 @@ class AppStrings {
     'whatif_scenario_title': 'Scénario',
     'whatif_title': 'Et si {c} coûtait moins cher ?',
     'whatif_desc':
-        "Baissez le prix cible de cette catégorie et/ou ajoutez un revenu mensuel supplémentaire pour voir l'effet combiné sur vos économies.",
+        "Baissez le prix cible de cette catégorie et voyez combien vous garderiez de plus ce mois-ci.",
     'whatif_exp_section': 'Dépenses',
-    'whatif_income_section': 'Revenus',
     'target_price': 'Prix cible par transaction',
     'whatif_exp_summary': '{n} dépenses · {a} → {b}',
-    'extra_income':
-        'Revenu supplémentaire par mois — augmentation / job',
-    'whatif_income_note': "Laissez 0 si aucun revenu supplémentaire.",
-    'whatif_kept_from': 'Économie sur {c}',
-    'whatif_extra_income': 'Revenu supplémentaire',
-    'whatif_net': 'Effet net ce mois',
+    'whatif_kept': 'Vous garderiez {a} ce mois-ci',
     'whatif_new_total': 'Nouveau total de la catégorie',
     'whatif_share': 'Part des dépenses',
     'whatif_rate': "Taux d'épargne",
     'whatif_savings': 'Épargne du mois',
     'whatif_none':
         'Aucune dépense de cette catégorie ce mois à simuler.',
+    'exclude_card_title': 'Et si vous coupiez une catégorie ?',
+    'stats_exclude':
+        "Choisissez une catégorie pour voir comment votre mois change si vous arrêtiez d'y dépenser — l'argent que vous épargneriez, et vos nouvelles dépenses, épargne et taux d'épargne.",
+    'exclude_hint':
+        "Sélectionnez une catégorie pour voir combien vous garderiez en retirant ses dépenses ce mois-ci.",
+    'exclude_saved': 'Vous épargneriez ce mois-ci',
+    'exclude_note': 'En retirant {c} et ses {n} dépenses ce mois',
   };
 
   static const Map<String, String> _ar = {
@@ -891,21 +894,23 @@ class AppStrings {
     'whatif_scenario_title': 'سيناريو',
     'whatif_title': 'ماذا لو أصبحت {c} أرخص؟',
     'whatif_desc':
-        'اخفض السعر المستهدف لهذه الفئة و/أو أضف دخلًا إضافيًا شهريًا لترى الأثر المجمع على مدخراتك.',
+        'اخفض السعر المستهدف لهذه الفئة وشاهد كم ستوفر أكثر هذا الشهر.',
     'whatif_exp_section': 'المصاريف',
-    'whatif_income_section': 'الإيرادات',
     'target_price': 'السعر المستهدف لكل عملية',
     'whatif_exp_summary': '{n} عمليات · {a} → {b}',
-    'extra_income': 'دخل إضافي شهري — ترقية / عمل جانبي',
-    'whatif_income_note': 'اتركه 0 إذا لم تخطط لدخل إضافي.',
-    'whatif_kept_from': 'توفير من {c}',
-    'whatif_extra_income': 'الدخل الإضافي',
-    'whatif_net': 'التحسن الصافي هذا الشهر',
+    'whatif_kept': 'ستوفر {a} هذا الشهر',
     'whatif_new_total': 'الإجمالي الجديد للفئة',
     'whatif_share': 'حصة المصاريف',
     'whatif_rate': 'نسبة الادخار',
     'whatif_savings': 'ادخار هذا الشهر',
     'whatif_none': 'لا توجد مصاريف لهذه الفئة هذا الشهر للمحاكاة.',
+    'exclude_card_title': 'ماذا لو توقفت عن فئة؟',
+    'stats_exclude':
+        'اختر فئة لترى كيف يتغير شهرك إذا توقفت عن الإنفاق عليها كليًا — المال الذي ستوفره، ومصاريفك ومدخراتك ونسبة الادخار الجديدة.',
+    'exclude_hint':
+        'اختر فئة لترى كم ستوفر إذا أزلت مصاريفها هذا الشهر.',
+    'exclude_saved': 'ستوفر هذا الشهر',
+    'exclude_note': 'بإزالة {c} ومصاريفها الـ {n} هذا الشهر',
   };
 
   /// Default expense category slug -> localized display name.
