@@ -320,6 +320,8 @@ class AppStrings {
     'vs_last': 'vs last month',
     'stats_budgets':
         'Your monthly budget targets for this category, with the amount already spent. The bar turns amber near 80% and red when over budget.',
+    'budget_set_hint':
+        'You have no budget for this month yet. Set one to track your spending category by category.',
   };
 
   static const Map<String, String> _fr = {
@@ -628,6 +630,8 @@ class AppStrings {
     'vs_last': 'vs mois dernier',
     'stats_budgets':
         'Vos objectifs mensuels pour cette catégorie, avec le montant déjà dépensé. La barre passe à l\'ambre vers 80 % et au rouge quand le budget est dépassé.',
+    'budget_set_hint':
+        "Vous n'avez pas encore de budget pour ce mois. Créez-en un pour suivre vos dépenses catégorie par catégorie.",
   };
 
   static const Map<String, String> _ar = {
@@ -929,6 +933,8 @@ class AppStrings {
     'vs_last': 'مقارنة بالشهر الماضي',
     'stats_budgets':
         'أهدافك الشهرية لهذه الفئة والمبلغ المُنفَق. يتحول الشريط للبرتقالي عند 80% وللأحمر عند تجاوز الميزانية.',
+    'budget_set_hint':
+        'لا يوجد ميزانية لهذا الشهر بعد. أنشئ واحدة لمتابعة مصاريفك حسب الفئة.',
   };
 
   /// Default expense category slug -> localized display name.

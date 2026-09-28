@@ -222,7 +222,42 @@ class _StatsScreenState extends State<StatsScreen> {
             )
             .toList()
           ..sort((a, b) => b.amount.compareTo(a.amount));
-    if (list.isEmpty) return const SizedBox.shrink();
+    if (list.isEmpty) {
+      return SectionCard(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _cardTitle(context, strings.tr('budgets'), 'stats_budgets'),
+            const SizedBox(height: 10),
+            Text(
+              strings.tr('budget_set_hint'),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed:
+                    () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const BudgetsScreen(),
+                      ),
+                    ),
+                icon: const Icon(Icons.add_rounded, size: 18),
+                label: Text(strings.tr('add_budget')),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return SectionCard(
       padding: const EdgeInsets.all(16),
