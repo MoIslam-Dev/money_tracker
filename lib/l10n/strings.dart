@@ -318,6 +318,7 @@ class AppStrings {
         'Spending on {c} is {p}% above its recent average this month.',
     'spent_this_month': 'Spent this month',
     'vs_last': 'vs last month',
+    'average': 'Average',
     'stats_budgets':
         'Your monthly budget targets for this category, with the amount already spent. The bar turns amber near 80% and red when over budget.',
     'budget_set_hint':
@@ -628,6 +629,7 @@ class AppStrings {
         'Les dépenses sur {c} dépassent de {p} % leur moyenne récente ce mois.',
     'spent_this_month': 'Dépensé ce mois-ci',
     'vs_last': 'vs mois dernier',
+    'average': 'Moyenne',
     'stats_budgets':
         'Vos objectifs mensuels pour cette catégorie, avec le montant déjà dépensé. La barre passe à l\'ambre vers 80 % et au rouge quand le budget est dépassé.',
     'budget_set_hint':
@@ -931,6 +933,7 @@ class AppStrings {
         'الإنفاق على {c} أعلى بنسبة {p}% من متوسطه المعتاد هذا الشهر.',
     'spent_this_month': 'أنفقت هذا الشهر',
     'vs_last': 'مقارنة بالشهر الماضي',
+    'average': 'المتوسط',
     'stats_budgets':
         'أهدافك الشهرية لهذه الفئة والمبلغ المُنفَق. يتحول الشريط للبرتقالي عند 80% وللأحمر عند تجاوز الميزانية.',
     'budget_set_hint':

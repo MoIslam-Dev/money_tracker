@@ -1549,80 +1549,121 @@ class _CategoryTxScreen extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 14),
       child: SectionCard(
-        padding: const EdgeInsets.all(14),
-        child: Row(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: AppColors.expenseOn(context).withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                Icons.receipt_long_rounded,
-                color: AppColors.expenseOn(context),
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    strings.tr('spent_this_month'),
-                    style: t.textTheme.labelSmall?.copyWith(
-                      color: t.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    state.money(total),
-                    style: t.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.expenseOn(context),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+            Row(
               children: [
-                Text(
-                  '${txs.length} ${strings.tr('expenses')}',
-                  style: t.textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: t.colorScheme.onSurface,
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: AppColors.expenseOn(context).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.receipt_long_rounded,
+                    color: AppColors.expenseOn(context),
+                    size: 20,
                   ),
                 ),
-                Text(
-                  strings
-                      .tr('avg_expense_tx')
-                      .replaceAll('{n}', '${txs.length}')
-                      .replaceAll('{a}', state.money(avg)),
-                  style: t.textTheme.labelSmall?.copyWith(
-                    color: t.colorScheme.onSurfaceVariant,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        strings.tr('spent_this_month'),
+                        style: t.textTheme.labelSmall?.copyWith(
+                          color: t.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        state.money(total),
+                        style: t.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.expenseOn(context),
+                        ),
+                      ),
+                    ],
                   ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Divider(
+              height: 1,
+              color: t.colorScheme.outlineVariant.withValues(alpha: 0.6),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _summaryPill(
+                  context,
+                  label: strings.tr('expenses'),
+                  value: '${txs.length}',
+                ),
+                _summaryPill(
+                  context,
+                  label: strings.tr('average'),
+                  value: state.money(avg),
                 ),
                 if (prevTotal > 0)
-                  Text(
-                    diff >= 0
-                        ? '+${state.money(diff)} ${strings.tr('vs_last')}'
-                        : '${state.money(diff)} ${strings.tr('vs_last')}',
-                    style: t.textTheme.labelSmall?.copyWith(
-                      color:
-                          diff >= 0
-                              ? AppColors.expenseOn(context)
-                              : AppColors.incomeOn(context),
-                      fontWeight: FontWeight.w700,
-                    ),
+                  _summaryPill(
+                    context,
+                    label: strings.tr('vs_last'),
+                    value:
+                        '${diff >= 0 ? '+' : ''}${state.money(diff)}',
+                    color:
+                        diff >= 0
+                            ? AppColors.expenseOn(context)
+                            : AppColors.incomeOn(context),
                   ),
               ],
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _summaryPill(
+    BuildContext context, {
+    required String label,
+    required String value,
+    Color? color,
+  }) {
+    final t = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: t.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label.toUpperCase(),
+            style: t.textTheme.labelSmall?.copyWith(
+              fontSize: 9,
+              letterSpacing: 0.6,
+              color: t.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: t.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: color ?? t.colorScheme.onSurface,
+            ),
+          ),
+        ],
       ),
     );
   }
