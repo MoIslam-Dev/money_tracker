@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/strings.dart';
 import '../models/models.dart';
 import '../state/app_state.dart';
 import '../theme/theme.dart';
@@ -50,6 +51,8 @@ List<String> buildInsights(BuildContext context) {
       );
     }
   }
+
+  _spendSpike(state, strings, month, catTotals, out);
 
   final monday = now.subtract(Duration(days: now.weekday - 1));
   final weekTotals = <int, int>{};
@@ -161,6 +164,46 @@ List<String> buildInsights(BuildContext context) {
   }
 
   return out;
+}
+
+/// Flags a category whose spending this month is well above its average of
+/// the previous three months (a "spend spike" worth reviewing).
+void _spendSpike(
+  AppState state,
+  AppStrings strings,
+  DateTime month,
+  Map<int, int> catTotals,
+  List<String> out,
+) {
+  for (final entry in catTotals.entries) {
+    final cur = entry.value;
+    if (cur <= 0) continue;
+    var prevSum = 0;
+    var prevMonths = 0;
+    for (var k = 1; k <= 3; k++) {
+      final d = DateTime(month.year, month.month - k);
+      final m = state.categoryTotalsInMonth(d)[entry.key] ?? 0;
+      if (m > 0) {
+        prevSum += m;
+        prevMonths++;
+      }
+    }
+    if (prevMonths < 2 || prevSum <= 0) continue;
+    final prevAvg = prevSum / prevMonths;
+    if (cur < prevAvg * 1.5) continue;
+    final cat = state.categoryById(entry.key);
+    final label =
+        cat == null ? strings.tr('other') : state.categoryLabel(cat);
+    out.add(
+      strings
+          .tr('spike_category')
+          .replaceAll('{c}', label)
+          .replaceAll(
+            '{p}',
+            ((cur / prevAvg - 1) * 100).toStringAsFixed(0),
+          ),
+    );
+  }
 }
 
 class InsightsScreen extends StatelessWidget {

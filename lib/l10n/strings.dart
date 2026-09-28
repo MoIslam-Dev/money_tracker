@@ -314,6 +314,12 @@ class AppStrings {
         'Select a category to see how much more you would keep if you removed its spending this month.',
     'exclude_saved': 'You would save this month',
     'exclude_note': 'Removing {c} and its {n} expenses this month',
+    'spike_category':
+        'Spending on {c} is {p}% above its recent average this month.',
+    'spent_this_month': 'Spent this month',
+    'vs_last': 'vs last month',
+    'stats_budgets':
+        'Your monthly budget targets for this category, with the amount already spent. The bar turns amber near 80% and red when over budget.',
   };
 
   static const Map<String, String> _fr = {
@@ -616,6 +622,12 @@ class AppStrings {
         "Sélectionnez une catégorie pour voir combien vous garderiez en retirant ses dépenses ce mois-ci.",
     'exclude_saved': 'Vous épargneriez ce mois-ci',
     'exclude_note': 'En retirant {c} et ses {n} dépenses ce mois',
+    'spike_category':
+        'Les dépenses sur {c} dépassent de {p} % leur moyenne récente ce mois.',
+    'spent_this_month': 'Dépensé ce mois-ci',
+    'vs_last': 'vs mois dernier',
+    'stats_budgets':
+        'Vos objectifs mensuels pour cette catégorie, avec le montant déjà dépensé. La barre passe à l\'ambre vers 80 % et au rouge quand le budget est dépassé.',
   };
 
   static const Map<String, String> _ar = {
@@ -911,6 +923,12 @@ class AppStrings {
         'اختر فئة لترى كم ستوفر إذا أزلت مصاريفها هذا الشهر.',
     'exclude_saved': 'ستوفر هذا الشهر',
     'exclude_note': 'بإزالة {c} ومصاريفها الـ {n} هذا الشهر',
+    'spike_category':
+        'الإنفاق على {c} أعلى بنسبة {p}% من متوسطه المعتاد هذا الشهر.',
+    'spent_this_month': 'أنفقت هذا الشهر',
+    'vs_last': 'مقارنة بالشهر الماضي',
+    'stats_budgets':
+        'أهدافك الشهرية لهذه الفئة والمبلغ المُنفَق. يتحول الشريط للبرتقالي عند 80% وللأحمر عند تجاوز الميزانية.',
   };
 
   /// Default expense category slug -> localized display name.

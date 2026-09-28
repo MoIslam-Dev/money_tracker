@@ -44,11 +44,6 @@ class _Root extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
-    if (!state.loaded) {
-      return const MaterialApp(
-        home: Scaffold(body: Center(child: CircularProgressIndicator())),
-      );
-    }
     final strings = state.strings;
     final themeMode = themeModeFrom(state.settings.theme);
     final locale = Locale(strings.lang);
@@ -74,7 +69,16 @@ class _Root extends StatelessWidget {
           ),
         );
       },
-      home: const HomeShell(),
+      home: state.loaded ? const HomeShell() : const _Splash(),
     );
+  }
+}
+
+class _Splash extends StatelessWidget {
+  const _Splash();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }
 }

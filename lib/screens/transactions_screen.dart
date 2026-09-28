@@ -42,13 +42,37 @@ class TransactionsScreen extends StatelessWidget {
   }
 }
 
-class _TxList extends StatelessWidget {
+class _TxList extends StatefulWidget {
   const _TxList();
+
+  @override
+  State<_TxList> createState() => _TxListState();
+}
+
+class _DayGroup {
+  final String date;
+  final List<AppTransaction> items;
+  const _DayGroup(this.date, this.items);
+}
+
+class _TxListState extends State<_TxList> {
+  List<AppTransaction>? _cacheFor;
+  List<_DayGroup> _groups = const [];
+
+  void _rebuildCache(List<AppTransaction> transactions) {
+    final grouped = <String, List<AppTransaction>>{};
+    for (final t in transactions) {
+      grouped.putIfAbsent(t.date, () => []).add(t);
+    }
+    final dates = grouped.keys.toList()..sort((a, b) => b.compareTo(a));
+    _groups = [for (final date in dates) _DayGroup(date, grouped[date]!)];
+  }
 
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
     final strings = state.strings;
+    final t = Theme.of(context);
     if (state.transactions.isEmpty) {
       return EmptyState(
         icon: Icons.receipt_long_outlined,
@@ -65,34 +89,37 @@ class _TxList extends StatelessWidget {
       );
     }
 
-    final groups = <String, List<AppTransaction>>{};
-    for (final t in state.transactions) {
-      groups.putIfAbsent(t.date, () => []).add(t);
+    if (!identical(_cacheFor, state.transactions)) {
+      _cacheFor = state.transactions;
+      _rebuildCache(state.transactions);
     }
-    final dates = groups.keys.toList()..sort((a, b) => b.compareTo(a));
 
     return ListView.builder(
       padding: const EdgeInsets.only(bottom: 40),
-      itemCount: dates.length,
+      itemCount: _groups.length,
       itemBuilder: (context, i) {
-        final date = dates[i];
-        final items = groups[date]!;
+        final g = _groups[i];
+        final items = g.items;
+        final currency = state.currency;
         final dayTotals = items.fold<({int exp, int inc})>(
           (exp: 0, inc: 0),
           (acc, t) =>
-              t.currency != state.currency
+              t.currency != currency
                   ? acc
                   : t.isExpense
                   ? (exp: acc.exp + t.amount, inc: acc.inc)
                   : (exp: acc.exp, inc: acc.inc + t.amount),
         );
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _dayHeader(context, date, dayTotals),
-            for (final t in items) _txRow(context, t),
-            const SizedBox(height: 6),
-          ],
+        return RepaintBoundary(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _dayHeader(context, g.date, dayTotals),
+              for (final tx in items)
+                RepaintBoundary(child: _txRow(context, tx, t)),
+              const SizedBox(height: 6),
+            ],
+          ),
         );
       },
     );
@@ -185,10 +212,12 @@ class _TxList extends StatelessWidget {
     return '${weekdayName(d.weekday, strings.lang)} ${d.day} ${monthName(d.month, strings.lang)}';
   }
 
-  Widget _txRow(BuildContext context, AppTransaction t) {
+  Widget _txRow(BuildContext context, AppTransaction t, ThemeData theme) {
     final state = context.watch<AppState>();
     final strings = state.strings;
     final cat = state.categoryById(t.categoryId);
+    final onSurface = theme.colorScheme.onSurface;
+    final muted = theme.colorScheme.onSurfaceVariant;
     final color =
         t.isExpense
             ? AppColors.expenseOn(context)
@@ -221,8 +250,9 @@ class _TxList extends StatelessWidget {
                     cat == null
                         ? strings.tr('other')
                         : state.categoryLabel(cat),
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w700,
+                      color: onSurface,
                     ),
                   ),
                   if (t.note != null && t.note!.isNotEmpty)
@@ -230,18 +260,16 @@ class _TxList extends StatelessWidget {
                       t.note!,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: muted,
                       ),
                     ),
                   if (t.paymentMethod.isNotEmpty && t.paymentMethod != 'cash')
                     Text(
                       strings.tr(t.paymentMethod),
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      style: theme.textTheme.labelSmall?.copyWith(
                         fontSize: 10,
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+                        color: muted.withValues(alpha: 0.8),
                       ),
                     ),
                 ],
@@ -679,6 +707,9 @@ class _SearchScreenState extends State<SearchScreen> {
                                           style: t.textTheme.bodyMedium
                                               ?.copyWith(
                                                 fontWeight: FontWeight.w600,
+                                                color: t
+                                                    .colorScheme
+                                                    .onSurface,
                                               ),
                                         ),
                                         Text(

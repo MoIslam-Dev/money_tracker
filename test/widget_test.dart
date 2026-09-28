@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:money_tracker/main.dart';
+import 'package:money_tracker/models/models.dart';
 import 'package:money_tracker/screens/categories_screen.dart';
 import 'package:money_tracker/screens/home_shell.dart';
 import 'package:money_tracker/screens/notification_settings_screen.dart';
 import 'package:money_tracker/screens/settings_screen.dart';
+import 'package:money_tracker/state/app_state.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -88,6 +91,36 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text('Statistics'), findsWidgets);
+  });
+
+  testWidgets('dark theme transaction rows resolve light-on-dark text',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'settings.lang': 'en',
+      'settings.theme': 'dark',
+      'settings.demoSeen': true,
+      'settings.demoAdded': true,
+    });
+    await pumpApp(tester);
+
+    final state = tester.element(find.byType(HomeShell)).read<AppState>();
+    final firstCat = state.categories.first.id;
+    await tester.runAsync(() => state.addTransaction(
+          type: TxType.expense,
+          amount: 1200,
+          categoryId: firstCat,
+          date: DateTime.now(),
+        ));
+
+    await tester.tap(find.byIcon(Icons.receipt_long_outlined));
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(tester.takeException(), isNull);
+    final label = find.text(state.categoryLabel(state.categories.first));
+    expect(label, findsWidgets);
+    final text = tester.widget<Text>(label.first);
+    expect(text.style?.color, const Color(0xFFECE7D8),
+        reason: 'category name must use the dark onSurface, never light black');
   });
 
   testWidgets('settings opens the categories and reminders screens',

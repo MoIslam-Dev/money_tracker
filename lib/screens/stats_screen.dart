@@ -7,6 +7,7 @@ import '../theme/theme.dart';
 import '../utils/money.dart';
 import '../widgets/icons.dart';
 import '../widgets/widgets.dart';
+import 'budgets_screen.dart';
 
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
@@ -43,6 +44,8 @@ class _StatsScreenState extends State<StatsScreen> {
               _monthBar(context, month),
               const SizedBox(height: 16),
               _summaryCard(context, month),
+              const SizedBox(height: 20),
+              _budgetCard(context, month),
               const SizedBox(height: 20),
               _donut(context, month),
               const SizedBox(height: 12),
@@ -203,6 +206,117 @@ class _StatsScreenState extends State<StatsScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _budgetCard(BuildContext context, DateTime month) {
+    final state = context.watch<AppState>();
+    final strings = state.strings;
+    final list =
+        state.budgets
+            .where(
+              (b) =>
+                  b.month == month.month &&
+                  b.year == month.year &&
+                  b.currency == state.currency,
+            )
+            .toList()
+          ..sort((a, b) => b.amount.compareTo(a.amount));
+    if (list.isEmpty) return const SizedBox.shrink();
+
+    return SectionCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _cardTitle(context, strings.tr('budgets'), 'stats_budgets'),
+          const SizedBox(height: 12),
+          for (final b in list) ...[
+            _budgetRow(context, b, month),
+            if (b != list.last) const SizedBox(height: 12),
+          ],
+          const SizedBox(height: 6),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed:
+                  () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const BudgetsScreen(),
+                    ),
+                  ),
+              icon: const Icon(Icons.arrow_forward_rounded, size: 16),
+              label: Text(strings.tr('budgets')),
+              style: TextButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _budgetRow(BuildContext context, Budget budget, DateTime month) {
+    final state = context.watch<AppState>();
+    final strings = state.strings;
+    final t = Theme.of(context);
+    final cat = state.categoryById(budget.categoryId);
+    final spent = state.categorySpentInMonth(budget.categoryId, month);
+    final pct = budget.amount == 0 ? 0.0 : spent / budget.amount * 100;
+    final color =
+        pct >= 100
+            ? AppColors.expenseOn(context)
+            : pct >= 80
+            ? AppColors.amberOn(context)
+            : t.colorScheme.primary;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                cat == null ? strings.tr('other') : state.categoryLabel(cat),
+                style: t.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: t.colorScheme.onSurface,
+                ),
+              ),
+            ),
+            Text(
+              '${pct.toStringAsFixed(0)}%',
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.w800,
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        LevelBar(value: (pct / 100).clamp(0.0, 1.0), color: color),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                '${strings.tr('spent')}: ${state.money(spent)}',
+                style: t.textTheme.labelSmall?.copyWith(
+                  color: t.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            Text(
+              '${strings.tr('budget')}: ${state.money(budget.amount)}',
+              style: t.textTheme.labelSmall?.copyWith(
+                color: t.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -1326,49 +1440,154 @@ class _CategoryTxScreen extends StatelessWidget {
         child:
             txs.isEmpty
                 ? const SizedBox.shrink()
-                : ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
-                  itemCount: txs.length,
-                  itemBuilder: (context, i) {
-                    final x = txs[i];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: SectionCard(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 10,
-                        ),
-                        child: Row(
-                          children: [
-                            Text(
-                              x.date,
-                              style: t.textTheme.labelSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _categoryMonthSummary(context, txs),
+                      Expanded(
+                        child: ListView.builder(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
+                          itemCount: txs.length,
+                          itemBuilder: (context, i) {
+                            final x = txs[i];
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: SectionCard(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 10,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Text(
+                                      x.date,
+                                      style: t.textTheme.labelSmall?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Text(
+                                        x.note ?? '',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.end,
+                                        style: t.textTheme.bodySmall,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      '- ${state.moneyFor(x.amount, x.currency)}',
+                                      style: TextStyle(
+                                        color: AppColors.expenseOn(context),
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                x.note ?? '',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                textAlign: TextAlign.end,
-                                style: t.textTheme.bodySmall,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              '- ${state.moneyFor(x.amount, x.currency)}',
-                              style: TextStyle(
-                                color: AppColors.expenseOn(context),
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ],
+                            );
+                          },
                         ),
                       ),
-                    );
-                  },
+                    ],
+                  ),
+      ),
+    );
+  }
+
+  Widget _categoryMonthSummary(
+    BuildContext context,
+    List<AppTransaction> txs,
+  ) {
+    final state = context.watch<AppState>();
+    final strings = state.strings;
+    final t = Theme.of(context);
+    var total = 0;
+    for (final x in txs) {
+      total += x.amount;
+    }
+    final avg = txs.isEmpty ? 0 : total ~/ txs.length;
+    final prev = DateTime(month.year, month.month - 1);
+    final prevTotal =
+        state.categoryTotalsInMonth(prev)[categoryId] ?? 0;
+    final diff = total - prevTotal;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 14),
+      child: SectionCard(
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: AppColors.expenseOn(context).withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Icons.receipt_long_rounded,
+                color: AppColors.expenseOn(context),
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    strings.tr('spent_this_month'),
+                    style: t.textTheme.labelSmall?.copyWith(
+                      color: t.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    state.money(total),
+                    style: t.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.expenseOn(context),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '${txs.length} ${strings.tr('expenses')}',
+                  style: t.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: t.colorScheme.onSurface,
+                  ),
                 ),
+                Text(
+                  strings
+                      .tr('avg_expense_tx')
+                      .replaceAll('{n}', '${txs.length}')
+                      .replaceAll('{a}', state.money(avg)),
+                  style: t.textTheme.labelSmall?.copyWith(
+                    color: t.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                if (prevTotal > 0)
+                  Text(
+                    diff >= 0
+                        ? '+${state.money(diff)} ${strings.tr('vs_last')}'
+                        : '${state.money(diff)} ${strings.tr('vs_last')}',
+                    style: t.textTheme.labelSmall?.copyWith(
+                      color:
+                          diff >= 0
+                              ? AppColors.expenseOn(context)
+                              : AppColors.incomeOn(context),
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
