@@ -68,6 +68,25 @@ void main() {
     expect(state.countInMonth(month), 3);
   });
 
+  test('all-time income and expense totals span every month', () async {
+    final month = state.currentMonth;
+    final prev = DateTime(month.year, month.month - 1, 5);
+    final incomeCat = categoryId('salary');
+    final expenseCat = categoryId('food');
+
+    await state.addTransaction(
+        type: TxType.income, amount: 50000, categoryId: incomeCat, date: prev);
+    await state.addTransaction(
+        type: TxType.expense,
+        amount: 10000,
+        categoryId: expenseCat,
+        date: DateTime(month.year, month.month, 12));
+
+    expect(state.incomeTotal, 50000);
+    expect(state.expenseTotal, 10000);
+    expect(state.balance, 40000);
+  });
+
   test('category aggregates in month', () async {
     final month = state.currentMonth;
     final incomeCat = categoryId('salary');

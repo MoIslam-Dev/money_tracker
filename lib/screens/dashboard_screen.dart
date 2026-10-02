@@ -11,6 +11,7 @@ import 'add_edit_screen.dart';
 import 'budgets_screen.dart';
 import 'calendar_screen.dart';
 import 'insights_screen.dart';
+import 'monthly_summary_screen.dart';
 import 'recurring_screen.dart';
 import 'savings_screen.dart';
 
@@ -28,6 +29,8 @@ class DashboardScreen extends StatelessWidget {
     final rate = state.savingsRate(month);
     final count = state.countInMonth(month);
     final balance = state.balance;
+    final moneyIn = state.incomeTotal;
+    final moneyOut = state.expenseTotal;
 
     return Scaffold(
       body: SafeArea(
@@ -43,7 +46,7 @@ class DashboardScreen extends StatelessWidget {
                 SliverToBoxAdapter(child: _demoBanner(context)),
               ],
               SliverToBoxAdapter(
-                child: _balanceCard(context, balance, income, expense),
+                child: _balanceCard(context, balance, moneyIn, moneyOut),
               ),
               SliverToBoxAdapter(child: _todayCard(context)),
               const SliverToBoxAdapter(child: SizedBox(height: 16)),
@@ -173,7 +176,13 @@ class DashboardScreen extends StatelessWidget {
           Builder(
             builder:
                 (ctx) => IconButton(
-                  onPressed: () => _browseMonth(ctx),
+                  onPressed:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const MonthlySummaryScreen(),
+                        ),
+                      ),
                   icon: const Icon(Icons.calendar_view_month_rounded),
                   tooltip: strings.tr('monthly_summary'),
                 ),
@@ -181,16 +190,6 @@ class DashboardScreen extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  Future<void> _browseMonth(BuildContext context) async {
-    final state = context.read<AppState>();
-    final res = await showModalBottomSheet<DateTime>(
-      context: context,
-      showDragHandle: true,
-      builder: (ctx) => _MonthPickerSheet(initial: state.currentMonth),
-    );
-    if (res != null) state.setCurrentMonth(res);
   }
 
   Widget _demoBanner(BuildContext context) {
@@ -299,6 +298,16 @@ class DashboardScreen extends StatelessWidget {
                 fontWeight: FontWeight.w600,
                 height: 1.05,
                 letterSpacing: 0.3,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              strings.tr('all_time'),
+              style: const TextStyle(
+                color: Colors.white54,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 1.2,
               ),
             ),
             const SizedBox(height: 18),
@@ -1086,122 +1095,6 @@ class DashboardScreen extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _MonthPickerSheet extends StatefulWidget {
-  final DateTime initial;
-  const _MonthPickerSheet({required this.initial});
-
-  @override
-  State<_MonthPickerSheet> createState() => _MonthPickerSheetState();
-}
-
-class _MonthPickerSheetState extends State<_MonthPickerSheet> {
-  late DateTime _month = DateTime(widget.initial.year, widget.initial.month);
-
-  @override
-  Widget build(BuildContext context) {
-    final strings = context.watch<AppState>().strings;
-    final t = Theme.of(context);
-    final now = DateTime.now();
-    final candidates = <DateTime>[];
-    DateTime cursor = DateTime(_month.year, _month.month);
-    for (var i = 0; i < 24; i++) {
-      candidates.add(cursor);
-      cursor = DateTime(cursor.year, cursor.month - 1);
-    }
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              IconButton(
-                onPressed:
-                    () => setState(
-                      () => _month = DateTime(_month.year, _month.month + 1),
-                    ),
-                icon: const Icon(Icons.chevron_left),
-              ),
-              Expanded(
-                child: Text(
-                  '${monthName(_month.month, strings.lang)} ${_month.year}',
-                  textAlign: TextAlign.center,
-                  style: t.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              IconButton(
-                onPressed:
-                    () => setState(
-                      () => _month = DateTime(_month.year, _month.month - 1),
-                    ),
-                icon: const Icon(Icons.chevron_right),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          GridView.count(
-            crossAxisCount: 3,
-            shrinkWrap: true,
-            childAspectRatio: 2.4,
-            mainAxisSpacing: 8,
-            crossAxisSpacing: 8,
-            children: [
-              for (var i = 0; i < candidates.length; i++)
-                _monthCell(
-                  context,
-                  candidates[i],
-                  now,
-                  DateTime(now.year, now.month) ==
-                      DateTime(widget.initial.year, widget.initial.month),
-                ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          BigButton(
-            label: strings.tr('apply'),
-            onPressed: () => Navigator.pop(context, _month),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _monthCell(BuildContext context, DateTime m, DateTime now, bool _) {
-    final strings = context.watch<AppState>().strings;
-    final t = Theme.of(context);
-    final selected = m.year == _month.year && m.month == _month.month;
-    final isCurrent = m.year == now.year && m.month == now.month;
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: () => setState(() => _month = m),
-      child: Container(
-        decoration: BoxDecoration(
-          color:
-              selected
-                  ? t.colorScheme.primary
-                  : t.colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(12),
-          border:
-              isCurrent && !selected
-                  ? Border.all(color: t.colorScheme.primary, width: 1)
-                  : null,
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          '${monthShort(m.month, strings.lang)} ${m.year}',
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 12,
-            color: selected ? t.colorScheme.onPrimary : t.colorScheme.onSurface,
-          ),
-        ),
       ),
     );
   }

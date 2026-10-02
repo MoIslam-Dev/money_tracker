@@ -562,6 +562,22 @@ class AppState extends ChangeNotifier {
     return b;
   }
 
+  int get incomeTotal {
+    var s = 0;
+    for (final t in transactions) {
+      if (!t.isExpense && _matchesCurrency(t, null)) s += t.amount;
+    }
+    return s;
+  }
+
+  int get expenseTotal {
+    var s = 0;
+    for (final t in transactions) {
+      if (t.isExpense && _matchesCurrency(t, null)) s += t.amount;
+    }
+    return s;
+  }
+
   int expensesOn(DateTime day, {String? currency}) {
     final k = dateKey(day);
     var s = 0;

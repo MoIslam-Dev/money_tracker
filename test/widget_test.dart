@@ -93,6 +93,19 @@ void main() {
     expect(find.text('Statistics'), findsWidgets);
   });
 
+  testWidgets('monthly summary opens with real data and no errors',
+      (tester) async {
+    await pumpApp(tester);
+
+    await tester.tap(find.byIcon(Icons.calendar_view_month_rounded));
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('Monthly summary'), findsOneWidget);
+    expect(find.text('REMAINING'), findsOneWidget);
+  });
+
   testWidgets('dark theme transaction rows resolve light-on-dark text',
       (tester) async {
     SharedPreferences.setMockInitialValues({
